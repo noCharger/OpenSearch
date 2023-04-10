@@ -73,10 +73,7 @@ import org.opensearch.search.sort.SortOrder;
 import org.opensearch.search.suggest.SuggestBuilder;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import static org.opensearch.index.query.AbstractQueryBuilder.parseInnerQueryBuilder;
 import static org.opensearch.search.internal.SearchContext.TRACK_TOTAL_HITS_ACCURATE;
@@ -1452,6 +1449,25 @@ public final class SearchSourceBuilder implements Writeable, ToXContentObject, R
         innerToXContent(builder, params);
         builder.endObject();
         return builder;
+    }
+
+    public Map<String, Object> toMap() {
+        // TODO: this is a hack to bypass the map representation of the search source builder
+        // need to add a proper map representation
+
+        // create a map and add size into it
+        Map<String, Object> map = new HashMap<>();
+        map.put("size", size);
+        return map;
+//        try {
+//            XContentBuilder builder = XContentFactory.jsonBuilder();
+//            builder.startObject();
+//            innerToXContent(builder, ToXContent.EMPTY_PARAMS);
+//            builder.endObject();
+//            return builder.map();
+//        } catch (IOException e) {
+//            throw new UncheckedIOException(e);
+//        }
     }
 
     /**

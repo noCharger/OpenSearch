@@ -1,0 +1,57 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * The OpenSearch Contributors require contributions made to
+ * this file be licensed under the Apache-2.0 license or a
+ * compatible open source license.
+ */
+
+package org.opensearch.search.pipeline.common;
+
+import org.junit.Before;
+
+import org.opensearch.action.search.SearchRequest;
+import org.opensearch.common.settings.Settings;
+import org.opensearch.script.*;
+import org.opensearch.search.builder.SearchSourceBuilder;
+import org.opensearch.test.AbstractBuilderTestCase;
+
+import java.util.Collections;
+import java.util.HashMap;
+
+import static org.opensearch.search.RandomSearchRequestGenerator.randomSearchRequest;
+
+public class ScriptProcessorTest extends AbstractBuilderTestCase {
+//    private ScriptService scriptService;
+//    private Script script;
+//    private SearchScript searchScript;
+
+
+    // Test that the script processor can be created
+    public void testScriptProcessor() throws Exception {
+        String scriptName = "test-search-script";
+        ScriptService scriptService = new ScriptService(
+            Settings.builder().build(),
+            Collections.singletonMap(
+                Script.DEFAULT_SCRIPT_LANG,
+                new MockScriptEngine(Script.DEFAULT_SCRIPT_LANG, Collections.singletonMap(scriptName, ctx -> {
+                    Integer size = (Integer) ctx.get("size");
+                    ctx.put("size", size + 1024);
+                    return null;
+                }), Collections.emptyMap())
+            ),
+            new HashMap<>(ScriptModule.CORE_CONTEXTS)
+        );
+        Script script = new Script(ScriptType.INLINE, Script.DEFAULT_SCRIPT_LANG, scriptName, Collections.emptyMap());
+        SearchScript searchScript = scriptService.compile(script, SearchScript.CONTEXT).newInstance(script.getParams());
+
+        ScriptProcessor scriptProcessor = new ScriptProcessor(randomAlphaOfLength(10), null, script, null, scriptService);
+        // create a random SearchRequest
+        SearchRequest searchRequest = randomSearchRequest(SearchSourceBuilder::searchSource);
+
+        scriptProcessor.processRequest(searchRequest);
+        // assert size of search request
+        assertEquals(searchRequest.source().size(), 1023);
+        assertNotNull(scriptProcessor);
+    }
+}
