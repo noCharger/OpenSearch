@@ -75,7 +75,7 @@ public class ScriptProcessorTest extends AbstractBuilderTestCase {
                         Map<String, Object> sourceMap = (Map<String, Object>) ctx.get("source");
                         Integer size = (Integer) sourceMap.get("size");
                         String query = (String) sourceMap.get("query");
-                        if (query.contains("foo") && size < 2) {
+                        if (query.contains("field") && size < 2) {
                             sourceMap.put("size", 1024);
                         }
                     }
@@ -90,7 +90,7 @@ public class ScriptProcessorTest extends AbstractBuilderTestCase {
         ScriptProcessor scriptProcessor = new ScriptProcessor(randomAlphaOfLength(10), null, script, null, scriptService);
 
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        searchSourceBuilder.query(QueryBuilders.matchQuery("message", "foo"));
+        searchSourceBuilder.query(QueryBuilders.matchQuery("field", "foo"));
         SearchRequest searchRequest = new SearchRequest().source(searchSourceBuilder);
         // add a query to the search request
         scriptProcessor.processRequest(searchRequest);

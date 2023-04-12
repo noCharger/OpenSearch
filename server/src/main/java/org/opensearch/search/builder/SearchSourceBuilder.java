@@ -1554,7 +1554,7 @@ public final class SearchSourceBuilder implements Writeable, ToXContentObject, R
         Map<String, Object> attributes = new LinkedHashMap<>();
 
         if (queryBuilder instanceof MatchQueryBuilder) {
-            attributes.put("query", ((MatchQueryBuilder) queryBuilder).value());
+            attributes.put("query", ((MatchQueryBuilder) queryBuilder).fieldName());
         }
         attributes.put("postQuery", postQueryBuilder);
         attributes.put("from", from);
