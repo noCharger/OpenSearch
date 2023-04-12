@@ -10,7 +10,6 @@ package org.opensearch.search.pipeline.common;
 
 import org.opensearch.action.search.SearchRequest;
 
-import org.opensearch.action.search.SearchRequestBuilder;
 import org.opensearch.common.Nullable;
 import org.opensearch.common.bytes.BytesReference;
 import org.opensearch.common.util.CollectionUtils;
@@ -28,6 +27,7 @@ import org.opensearch.search.pipeline.SearchRequestProcessor;
 
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -92,9 +92,31 @@ public final class ScriptProcessor extends AbstractProcessor implements SearchRe
         if (cxt.isEmpty() || cxt.get("source") == null) {
             throw new IllegalArgumentException("script must have at least one key");
         }
-        SearchSourceBuilder sourceBuilder = SearchSourceBuilder.fromMap((Map<String, Object>) cxt.get("source"));
-        // set source builder to the search request
-        request.source(sourceBuilder);
+
+        Object obj = cxt.get("source");
+        if (obj instanceof Map<?, ?>) {
+            Map<?, ?> rawMap = (Map<?, ?>) obj;
+            Map<String, Object> resultMap = new LinkedHashMap<>();
+            boolean valid = true;
+
+            for (Map.Entry<?, ?> entry : rawMap.entrySet()) {
+                if (entry.getKey() instanceof String && entry.getValue() instanceof Object) {
+                    resultMap.put((String) entry.getKey(), entry.getValue());
+                } else {
+                    valid = false;
+                    break;
+                }
+            }
+
+            if (valid) {
+                SearchSourceBuilder sourceBuilder = SearchSourceBuilder.fromMap(resultMap);
+                request.source(sourceBuilder);
+            } else {
+                // Handle invalid map
+            }
+        } else {
+            // Handle invalid object
+        }
         return request;
     }
 

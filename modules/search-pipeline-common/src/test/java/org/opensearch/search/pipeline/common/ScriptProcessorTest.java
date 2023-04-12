@@ -17,6 +17,7 @@ import org.opensearch.search.builder.SearchSourceBuilder;
 import org.opensearch.test.AbstractBuilderTestCase;
 
 import java.util.Collections;
+import java.util.Map;
 import java.util.HashMap;
 
 import static org.opensearch.search.RandomSearchRequestGenerator.randomSearchRequest;
@@ -35,8 +36,12 @@ public class ScriptProcessorTest extends AbstractBuilderTestCase {
             Collections.singletonMap(
                 Script.DEFAULT_SCRIPT_LANG,
                 new MockScriptEngine(Script.DEFAULT_SCRIPT_LANG, Collections.singletonMap(scriptName, ctx -> {
-                    Integer size = (Integer) ctx.get("size");
-                    ctx.put("size", size + 1024);
+                    Object source = ctx.get("source");
+                    if (source instanceof Map) {
+                        Map<String, Object> sourceMap = (Map<String, Object>) source;
+                        Integer size = (Integer) sourceMap.get("size");
+                        sourceMap.put("size", size + 1024);
+                    }
                     return null;
                 }), Collections.emptyMap())
             ),
