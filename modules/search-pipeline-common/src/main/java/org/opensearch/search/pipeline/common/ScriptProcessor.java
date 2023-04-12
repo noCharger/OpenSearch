@@ -109,7 +109,7 @@ public final class ScriptProcessor extends AbstractProcessor implements SearchRe
             }
 
             if (valid) {
-                SearchSourceBuilder sourceBuilder = SearchSourceBuilder.fromMap(resultMap);
+                SearchSourceBuilder sourceBuilder = request.source().fromMap(resultMap);
                 request.source(sourceBuilder);
             } else {
                 // Handle invalid map

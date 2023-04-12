@@ -49,6 +49,7 @@ import org.opensearch.core.xcontent.XContentBuilder;
 import org.opensearch.common.xcontent.XContentHelper;
 import org.opensearch.core.xcontent.XContentParser;
 import org.opensearch.common.xcontent.XContentType;
+import org.opensearch.index.query.MatchQueryBuilder;
 import org.opensearch.index.query.QueryBuilder;
 import org.opensearch.index.query.QueryRewriteContext;
 import org.opensearch.index.query.Rewriteable;
@@ -1450,108 +1451,112 @@ public final class SearchSourceBuilder implements Writeable, ToXContentObject, R
         builder.endObject();
         return builder;
     }
-    public static SearchSourceBuilder fromMap(Map<String, Object> attributes) {
-        SearchSourceBuilder builder = new SearchSourceBuilder();
+    public SearchSourceBuilder fromMap(Map<String, Object> attributes) {
 
-        if (attributes.containsKey("queryBuilder")) {
-            builder.queryBuilder = (QueryBuilder) attributes.get("queryBuilder");
-        }
-        if (attributes.containsKey("postQueryBuilder")) {
-            builder.postQueryBuilder = (QueryBuilder) attributes.get("postQueryBuilder");
+//        if (attributes.containsKey("query")) {
+//            if (queryBuilder instanceof MatchQueryBuilder) {
+//                ((MatchQueryBuilder) queryBuilder).fromMap(attributes);
+//            }
+//        }
+
+        if (attributes.containsKey("postQuery")) {
+            postQueryBuilder = (QueryBuilder) attributes.get("postQuery");
         }
         if (attributes.containsKey("from")) {
-            builder.from = (int) attributes.get("from");
+            from = (int) attributes.get("from");
         }
         if (attributes.containsKey("size")) {
-            builder.size = (int) attributes.get("size");
+            size = (int) attributes.get("size");
         }
         if (attributes.containsKey("explain")) {
-            builder.explain = (Boolean) attributes.get("explain");
+            explain = (Boolean) attributes.get("explain");
         }
         if (attributes.containsKey("version")) {
-            builder.version = (Boolean) attributes.get("version");
+            version = (Boolean) attributes.get("version");
         }
         if (attributes.containsKey("seqNoAndPrimaryTerm")) {
-            builder.seqNoAndPrimaryTerm = (Boolean) attributes.get("seqNoAndPrimaryTerm");
+            seqNoAndPrimaryTerm = (Boolean) attributes.get("seqNoAndPrimaryTerm");
         }
         if (attributes.containsKey("sorts")) {
-            builder.sorts = (List<SortBuilder<?>>) attributes.get("sorts");
+            sorts = (List<SortBuilder<?>>) attributes.get("sorts");
         }
         if (attributes.containsKey("trackScores")) {
-            builder.trackScores = (boolean) attributes.get("trackScores");
+            trackScores = (boolean) attributes.get("trackScores");
         }
         if (attributes.containsKey("trackTotalHitsUpTo")) {
-            builder.trackTotalHitsUpTo = (Integer) attributes.get("trackTotalHitsUpTo");
+            trackTotalHitsUpTo = (Integer) attributes.get("trackTotalHitsUpTo");
         }
-        if (attributes.containsKey("searchAfterBuilder")) {
-            builder.searchAfterBuilder = (SearchAfterBuilder) attributes.get("searchAfterBuilder");
+        if (attributes.containsKey("searchAfter")) {
+            searchAfterBuilder = (SearchAfterBuilder) attributes.get("searchAfter");
         }
-        if (attributes.containsKey("sliceBuilder")) {
-            builder.sliceBuilder = (SliceBuilder) attributes.get("sliceBuilder");
+        if (attributes.containsKey("slice")) {
+            sliceBuilder = (SliceBuilder) attributes.get("slice");
         }
         if (attributes.containsKey("minScore")) {
-            builder.minScore = (Float) attributes.get("minScore");
+            minScore = (Float) attributes.get("minScore");
         }
         if (attributes.containsKey("timeout")) {
-            builder.timeout = (TimeValue) attributes.get("timeout");
+            timeout = (TimeValue) attributes.get("timeout");
         }
         if (attributes.containsKey("terminateAfter")) {
-            builder.terminateAfter = (int) attributes.get("terminateAfter");
+            terminateAfter = (int) attributes.get("terminateAfter");
         }
         if (attributes.containsKey("storedFieldsContext")) {
-            builder.storedFieldsContext = (StoredFieldsContext) attributes.get("storedFieldsContext");
+            storedFieldsContext = (StoredFieldsContext) attributes.get("storedFieldsContext");
         }
         if (attributes.containsKey("docValueFields")) {
-            builder.docValueFields = (List<FieldAndFormat>) attributes.get("docValueFields");
+            docValueFields = (List<FieldAndFormat>) attributes.get("docValueFields");
         }
         if (attributes.containsKey("scriptFields")) {
-            builder.scriptFields = (List<ScriptField>) attributes.get("scriptFields");
+            scriptFields = (List<ScriptField>) attributes.get("scriptFields");
         }
         if (attributes.containsKey("fetchSourceContext")) {
-            builder.fetchSourceContext = (FetchSourceContext) attributes.get("fetchSourceContext");
+            fetchSourceContext = (FetchSourceContext) attributes.get("fetchSourceContext");
         }
         if (attributes.containsKey("fetchFields")) {
-            builder.fetchFields = (List<FieldAndFormat>) attributes.get("fetchFields");
+            fetchFields = (List<FieldAndFormat>) attributes.get("fetchFields");
         }
         if (attributes.containsKey("aggregations")) {
-            builder.aggregations = (AggregatorFactories.Builder) attributes.get("aggregations");
+            aggregations = (AggregatorFactories.Builder) attributes.get("aggregations");
         }
-        if (attributes.containsKey("highlightBuilder")) {
-            builder.highlightBuilder = (HighlightBuilder) attributes.get("highlightBuilder");
+        if (attributes.containsKey("highlight")) {
+            highlightBuilder = (HighlightBuilder) attributes.get("highlight");
         }
-        if (attributes.containsKey("suggestBuilder")) {
-            builder.suggestBuilder = (SuggestBuilder) attributes.get("suggestBuilder");
+        if (attributes.containsKey("suggest")) {
+            suggestBuilder = (SuggestBuilder) attributes.get("suggest");
         }
-        if (attributes.containsKey("rescoreBuilders")) {
-            builder.rescoreBuilders = (List<RescorerBuilder>) attributes.get("rescoreBuilders");
+        if (attributes.containsKey("rescore")) {
+            rescoreBuilders = (List<RescorerBuilder>) attributes.get("rescore");
         }
         if (attributes.containsKey("indexBoosts")) {
-            builder.indexBoosts = (List<IndexBoost>) attributes.get("indexBoosts");
+            indexBoosts = (List<IndexBoost>) attributes.get("indexBoosts");
         }
         if (attributes.containsKey("stats")) {
-            builder.stats = (List<String>) attributes.get("stats");
+            stats = (List<String>) attributes.get("stats");
         }
-        if (attributes.containsKey("extBuilders")) {
-            builder.extBuilders = (List<SearchExtBuilder>) attributes.get("extBuilders");
+        if (attributes.containsKey("ext")) {
+            extBuilders = (List<SearchExtBuilder>) attributes.get("ext");
         }
         if (attributes.containsKey("profile")) {
-            builder.profile = (boolean) attributes.get("profile");
+            profile = (boolean) attributes.get("profile");
         }
         if (attributes.containsKey("collapse")) {
-            builder.collapse = (CollapseBuilder) attributes.get("collapse");
+            collapse = (CollapseBuilder) attributes.get("collapse");
         }
-        if (attributes.containsKey("pointInTimeBuilder")) {
-            builder.pointInTimeBuilder = (PointInTimeBuilder) attributes.get("pointInTimeBuilder");
+        if (attributes.containsKey("pointInTime")) {
+            pointInTimeBuilder = (PointInTimeBuilder) attributes.get("pointInTime");
         }
-        return builder;
+        return this;
     }
     public Map<String, Object> toMap() {
         // TODO: this is a hack to bypass the map representation of the search source builder
         // need to add a proper map representation
         Map<String, Object> attributes = new LinkedHashMap<>();
 
-        attributes.put("queryBuilder", queryBuilder);
-        attributes.put("postQueryBuilder", postQueryBuilder);
+        if (queryBuilder instanceof MatchQueryBuilder) {
+            attributes.put("query", ((MatchQueryBuilder) queryBuilder).value());
+        }
+        attributes.put("postQuery", postQueryBuilder);
         attributes.put("from", from);
         attributes.put("size", size);
         attributes.put("explain", explain);
@@ -1560,8 +1565,8 @@ public final class SearchSourceBuilder implements Writeable, ToXContentObject, R
         attributes.put("sorts", sorts);
         attributes.put("trackScores", trackScores);
         attributes.put("trackTotalHitsUpTo", trackTotalHitsUpTo);
-        attributes.put("searchAfterBuilder", searchAfterBuilder);
-        attributes.put("sliceBuilder", sliceBuilder);
+        attributes.put("searchAfter", searchAfterBuilder);
+        attributes.put("slice", sliceBuilder);
         attributes.put("minScore", minScore);
         attributes.put("timeout", timeout);
         attributes.put("terminateAfter", terminateAfter);
@@ -1571,15 +1576,15 @@ public final class SearchSourceBuilder implements Writeable, ToXContentObject, R
         attributes.put("fetchSourceContext", fetchSourceContext);
         attributes.put("fetchFields", fetchFields);
         attributes.put("aggregations", aggregations);
-        attributes.put("highlightBuilder", highlightBuilder);
-        attributes.put("suggestBuilder", suggestBuilder);
-        attributes.put("rescoreBuilders", rescoreBuilders);
+        attributes.put("highlight", highlightBuilder);
+        attributes.put("suggest", suggestBuilder);
+        attributes.put("rescore", rescoreBuilders);
         attributes.put("indexBoosts", indexBoosts);
         attributes.put("stats", stats);
-        attributes.put("extBuilders", extBuilders);
+        attributes.put("ext", extBuilders);
         attributes.put("profile", profile);
         attributes.put("collapse", collapse);
-        attributes.put("pointInTimeBuilder", pointInTimeBuilder);
+        attributes.put("pointInTime", pointInTimeBuilder);
 
         return attributes;
     }
