@@ -10,6 +10,7 @@ package org.opensearch.search.pipeline.common;
 
 import org.opensearch.action.search.SearchRequest;
 
+import org.opensearch.action.search.SearchRequestBuilder;
 import org.opensearch.common.Nullable;
 import org.opensearch.common.bytes.BytesReference;
 import org.opensearch.common.util.CollectionUtils;
@@ -21,6 +22,7 @@ import org.opensearch.common.xcontent.XContentType;
 import org.opensearch.common.xcontent.json.JsonXContent;
 
 import org.opensearch.script.*;
+import org.opensearch.search.builder.SearchSourceBuilder;
 import org.opensearch.search.pipeline.Processor;
 import org.opensearch.search.pipeline.SearchRequestProcessor;
 
@@ -82,18 +84,17 @@ public final class ScriptProcessor extends AbstractProcessor implements SearchRe
             searchScript = precompiledSearchScript;
         }
         // convert the search request to a map
-        Map<String, Object> cxt = request.source().toMap();
+        Map<String, Object> cxt = Map.of("source", request.source().toMap());
         // execute the script with the search request in context
         searchScript.execute(cxt);
         CollectionUtils.ensureNoSelfReferences(cxt, "search script");
-        // assert cxt has at least one key
-        if (cxt.isEmpty()) {
+        // assert cxt has at least one key and it contains source key
+        if (cxt.isEmpty() || cxt.get("source") == null) {
             throw new IllegalArgumentException("script must have at least one key");
         }
-        // update size of search request with the size from cxt
-        if (cxt.containsKey("size")) {
-            request.source().size((Integer) cxt.get("size"));
-        }
+        SearchSourceBuilder sourceBuilder = SearchSourceBuilder.fromMap((Map<String, Object>) cxt.get("source"));
+        // set source builder to the search request
+        request.source(sourceBuilder);
         return request;
     }
 

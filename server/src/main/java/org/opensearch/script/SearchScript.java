@@ -43,7 +43,7 @@ import java.util.Map;
  */
 public abstract class SearchScript {
 
-    public static final String[] PARAMETERS = { "query" };
+    public static final String[] PARAMETERS = { "cxt" };
 
     /** The context used to compile {@link SearchScript} factories. */
     public static final ScriptContext<Factory> CONTEXT = new ScriptContext<>(
@@ -66,7 +66,7 @@ public abstract class SearchScript {
         return params;
     }
 
-    public abstract void execute(Map<String, Object> query);
+    public abstract void execute(Map<String, Object> cxt);
 
     /**
      * Factory for ingest script
