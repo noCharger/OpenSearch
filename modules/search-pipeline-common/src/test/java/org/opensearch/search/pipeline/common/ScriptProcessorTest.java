@@ -38,7 +38,7 @@ public class ScriptProcessorTest extends AbstractBuilderTestCase {
                 new MockScriptEngine(Script.DEFAULT_SCRIPT_LANG, Collections.singletonMap(scriptName, ctx -> {
                     Object source = ctx.get("source");
                     if (source instanceof Map) {
-                        Map<String, Object> sourceMap = (Map<String, Object>) source;
+                        Map<String, Object> sourceMap = (Map<String, Object>) ctx.get("source");
                         Integer size = (Integer) sourceMap.get("size");
                         sourceMap.put("size", size + 1024);
                     }
@@ -56,7 +56,7 @@ public class ScriptProcessorTest extends AbstractBuilderTestCase {
 
         scriptProcessor.processRequest(searchRequest);
         // assert size of search request
-        assertEquals(searchRequest.source().size(), 1023);
+        assertEquals(1023, searchRequest.source().size());
         assertNotNull(scriptProcessor);
     }
 }

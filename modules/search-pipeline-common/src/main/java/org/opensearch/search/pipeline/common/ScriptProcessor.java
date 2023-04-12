@@ -100,7 +100,7 @@ public final class ScriptProcessor extends AbstractProcessor implements SearchRe
             boolean valid = true;
 
             for (Map.Entry<?, ?> entry : rawMap.entrySet()) {
-                if (entry.getKey() instanceof String && entry.getValue() instanceof Object) {
+                if (entry.getKey() instanceof String) {
                     resultMap.put((String) entry.getKey(), entry.getValue());
                 } else {
                     valid = false;
