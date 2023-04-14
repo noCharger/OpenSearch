@@ -1457,7 +1457,7 @@ public final class SearchSourceBuilder implements Writeable, ToXContentObject, R
 //        }
 
         if (queryBuilder instanceof QueryStringQueryBuilder) {
-            String queryString = ((Map) attributes.get("query")).get("string").toString();
+            String queryString = attributes.get("query").toString();
             this.query(new QueryStringQueryBuilder(queryString));
         }
 
