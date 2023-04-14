@@ -129,7 +129,7 @@ public final class ScriptProcessor extends AbstractProcessor implements SearchRe
         return script;
     }
 
-    SearchPipelineScript getPrecompiledSearchScript() {
+    SearchPipelineScript getPrecompiledSearchPipelineScript() {
         return precompiledSearchPipelineScript;
     }
 
