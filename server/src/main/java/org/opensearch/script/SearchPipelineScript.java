@@ -17,11 +17,11 @@ import java.util.Map;
  *
  * @opensearch.internal
  */
-public abstract class SearchScript {
+public abstract class SearchPipelineScript {
 
     public static final String[] PARAMETERS = { "ctx" };
 
-    /** The context used to compile {@link SearchScript} factories. */
+    /** The context used to compile {@link SearchPipelineScript} factories. */
     public static final ScriptContext<Factory> CONTEXT = new ScriptContext<>(
         "search",
         Factory.class,
@@ -33,7 +33,7 @@ public abstract class SearchScript {
     /** The generic runtime parameters for the script. */
     private final Map<String, Object> params;
 
-    public SearchScript(Map<String, Object> params) {
+    public SearchPipelineScript(Map<String, Object> params) {
         this.params = params;
     }
 
@@ -50,6 +50,6 @@ public abstract class SearchScript {
      * @opensearch.internal
      */
     public interface Factory {
-        SearchScript newInstance(Map<String, Object> params);
+        SearchPipelineScript newInstance(Map<String, Object> params);
     }
 }

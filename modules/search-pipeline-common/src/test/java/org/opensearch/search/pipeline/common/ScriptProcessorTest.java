@@ -8,8 +8,6 @@
 
 package org.opensearch.search.pipeline.common;
 
-import org.junit.Before;
-
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.common.settings.Settings;
 import org.opensearch.index.query.MatchQueryBuilder;
@@ -27,7 +25,7 @@ import static org.opensearch.search.RandomSearchRequestGenerator.randomSearchReq
 public class ScriptProcessorTest extends AbstractBuilderTestCase {
 //    private ScriptService scriptService;
 //    private Script script;
-//    private SearchScript searchScript;
+//    private SearchPipelineScript searchScript;
 
 
     // Test that the script processor can be created
@@ -50,7 +48,7 @@ public class ScriptProcessorTest extends AbstractBuilderTestCase {
             new HashMap<>(ScriptModule.CORE_CONTEXTS)
         );
         Script script = new Script(ScriptType.INLINE, Script.DEFAULT_SCRIPT_LANG, scriptName, Collections.emptyMap());
-        SearchScript searchScript = scriptService.compile(script, SearchScript.CONTEXT).newInstance(script.getParams());
+        SearchPipelineScript searchPipelineScript = scriptService.compile(script, org.opensearch.script.SearchPipelineScript.CONTEXT).newInstance(script.getParams());
 
         ScriptProcessor scriptProcessor = new ScriptProcessor(randomAlphaOfLength(10), null, script, null, scriptService);
         // create a random SearchRequest
@@ -85,7 +83,7 @@ public class ScriptProcessorTest extends AbstractBuilderTestCase {
             new HashMap<>(ScriptModule.CORE_CONTEXTS)
         );
         Script script = new Script(ScriptType.INLINE, Script.DEFAULT_SCRIPT_LANG, scriptName, Collections.emptyMap());
-        SearchScript searchScript = scriptService.compile(script, SearchScript.CONTEXT).newInstance(script.getParams());
+        SearchPipelineScript searchPipelineScript = scriptService.compile(script, org.opensearch.script.SearchPipelineScript.CONTEXT).newInstance(script.getParams());
 
         ScriptProcessor scriptProcessor = new ScriptProcessor(randomAlphaOfLength(10), null, script, null, scriptService);
 
@@ -122,7 +120,7 @@ public class ScriptProcessorTest extends AbstractBuilderTestCase {
             new HashMap<>(ScriptModule.CORE_CONTEXTS)
         );
         Script script = new Script(ScriptType.INLINE, Script.DEFAULT_SCRIPT_LANG, scriptName, Collections.emptyMap());
-        SearchScript searchScript = scriptService.compile(script, SearchScript.CONTEXT).newInstance(script.getParams());
+        SearchPipelineScript searchPipelineScript = scriptService.compile(script, org.opensearch.script.SearchPipelineScript.CONTEXT).newInstance(script.getParams());
 
         ScriptProcessor scriptProcessor = new ScriptProcessor(randomAlphaOfLength(10), null, script, null, scriptService);
 

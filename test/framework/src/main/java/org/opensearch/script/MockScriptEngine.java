@@ -177,8 +177,8 @@ public class MockScriptEngine implements ScriptEngine {
                 }
             };
             return context.factoryClazz.cast(factory);
-        } else if (context.instanceClazz.equals(SearchScript.class)) {
-            SearchScript.Factory factory = parameters -> new SearchScript(parameters) {
+        } else if (context.instanceClazz.equals(SearchPipelineScript.class)) {
+            SearchPipelineScript.Factory factory = parameters -> new SearchPipelineScript(parameters) {
                 @Override
                 public void execute(Map<String, Object> ctx) {
                     script.apply(ctx);

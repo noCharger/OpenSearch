@@ -42,26 +42,26 @@ public final class ScriptProcessor extends AbstractProcessor implements SearchRe
 
     private final Script script;
     private final ScriptService scriptService;
-    private final SearchScript precompiledSearchScript;
+    private final SearchPipelineScript precompiledSearchPipelineScript;
 
     /**
      * Processor that evaluates a script with a search request in its context
      * @param tag The processor's tag.
      * @param description The processor's description.
      * @param script The {@link Script} to execute.
-     * @param precompiledSearchScript The {@link Script} precompiled
+     * @param precompiledSearchPipelineScript The {@link Script} precompiled
      * @param scriptService The {@link ScriptService} used to execute the script.
      */
     ScriptProcessor(
         String tag,
         String description,
         Script script,
-        @Nullable SearchScript precompiledSearchScript,
+        @Nullable SearchPipelineScript precompiledSearchPipelineScript,
         ScriptService scriptService
     ) {
         super(tag, description);
         this.script = script;
-        this.precompiledSearchScript = precompiledSearchScript;
+        this.precompiledSearchPipelineScript = precompiledSearchPipelineScript;
         this.scriptService = scriptService;
     }
 
@@ -76,17 +76,17 @@ public final class ScriptProcessor extends AbstractProcessor implements SearchRe
         if (request == null || request.source() == null) {
             throw new IllegalArgumentException("search request must not be null");
         }
-        final SearchScript searchScript;
-        if (precompiledSearchScript == null) {
-            SearchScript.Factory factory = scriptService.compile(script, SearchScript.CONTEXT);
-            searchScript = factory.newInstance(script.getParams());
+        final SearchPipelineScript searchPipelineScript;
+        if (precompiledSearchPipelineScript == null) {
+            SearchPipelineScript.Factory factory = scriptService.compile(script, org.opensearch.script.SearchPipelineScript.CONTEXT);
+            searchPipelineScript = factory.newInstance(script.getParams());
         } else {
-            searchScript = precompiledSearchScript;
+            searchPipelineScript = precompiledSearchPipelineScript;
         }
         // convert the search request to a map
         Map<String, Object> ctx = Map.of("source", request.source().toMap());
         // execute the script with the search request in context
-        searchScript.execute(ctx);
+        searchPipelineScript.execute(ctx);
         CollectionUtils.ensureNoSelfReferences(ctx, "search script");
         // assert ctx has at least one key and it contains source key
         if (ctx.isEmpty() || ctx.get("source") == null) {
@@ -129,8 +129,8 @@ public final class ScriptProcessor extends AbstractProcessor implements SearchRe
         return script;
     }
 
-    SearchScript getPrecompiledSearchScript() {
-        return precompiledSearchScript;
+    SearchPipelineScript getPrecompiledSearchScript() {
+        return precompiledSearchPipelineScript;
     }
 
     public static final class Factory implements Processor.Factory {
@@ -158,17 +158,17 @@ public final class ScriptProcessor extends AbstractProcessor implements SearchRe
                 Arrays.asList("id", "source", "inline", "lang", "params", "options").forEach(config::remove);
 
                 // verify script is able to be compiled before successfully creating processor.
-                SearchScript searchScript = null;
+                SearchPipelineScript searchPipelineScript = null;
                 try {
-                    final SearchScript.Factory factory = scriptService.compile(script, SearchScript.CONTEXT);
+                    final SearchPipelineScript.Factory factory = scriptService.compile(script, org.opensearch.script.SearchPipelineScript.CONTEXT);
                     if (ScriptType.INLINE.equals(script.getType())) {
-                        searchScript = factory.newInstance(script.getParams());
+                        searchPipelineScript = factory.newInstance(script.getParams());
                     }
                 } catch (ScriptException e) {
                     // throw newConfigurationException(TYPE, processorTag, null, e);
                     // TODO: handle exception
                 }
-                return new ScriptProcessor(processorTag, description, script, searchScript, scriptService);
+                return new ScriptProcessor(processorTag, description, script, searchPipelineScript, scriptService);
             }
         }
     }
