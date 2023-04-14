@@ -68,6 +68,7 @@ public class ScriptModule {
             SignificantTermsHeuristicScoreScript.CONTEXT,
             IngestScript.CONTEXT,
             IngestConditionalScript.CONTEXT,
+            org.opensearch.script.SearchPipelineScript.CONTEXT,
             FilterScript.CONTEXT,
             SimilarityScript.CONTEXT,
             SimilarityWeightScript.CONTEXT,

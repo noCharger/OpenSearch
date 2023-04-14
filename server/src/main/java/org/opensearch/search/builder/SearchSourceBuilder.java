@@ -49,9 +49,7 @@ import org.opensearch.core.xcontent.XContentBuilder;
 import org.opensearch.common.xcontent.XContentHelper;
 import org.opensearch.core.xcontent.XContentParser;
 import org.opensearch.common.xcontent.XContentType;
-import org.opensearch.index.query.QueryBuilder;
-import org.opensearch.index.query.QueryRewriteContext;
-import org.opensearch.index.query.Rewriteable;
+import org.opensearch.index.query.*;
 import org.opensearch.script.Script;
 import org.opensearch.search.SearchExtBuilder;
 import org.opensearch.search.aggregations.AggregationBuilder;
@@ -73,10 +71,7 @@ import org.opensearch.search.sort.SortOrder;
 import org.opensearch.search.suggest.SuggestBuilder;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import static org.opensearch.index.query.AbstractQueryBuilder.parseInnerQueryBuilder;
 import static org.opensearch.search.internal.SearchContext.TRACK_TOTAL_HITS_ACCURATE;
@@ -1452,6 +1447,153 @@ public final class SearchSourceBuilder implements Writeable, ToXContentObject, R
         innerToXContent(builder, params);
         builder.endObject();
         return builder;
+    }
+    public SearchSourceBuilder fromMap(Map<String, Object> attributes) {
+
+//        if (attributes.containsKey("query")) {
+//            if (queryBuilder instanceof MatchQueryBuilder) {
+//                ((MatchQueryBuilder) queryBuilder).fromMap(attributes);
+//            }
+//        }
+
+        if (queryBuilder instanceof QueryStringQueryBuilder) {
+            String queryString = attributes.get("query").toString();
+            this.query(new QueryStringQueryBuilder(queryString));
+        }
+
+        if (attributes.containsKey("postQuery")) {
+            postQueryBuilder = (QueryBuilder) attributes.get("postQuery");
+        }
+        if (attributes.containsKey("from")) {
+            from = (int) attributes.get("from");
+        }
+        if (attributes.containsKey("size")) {
+            size = (int) attributes.get("size");
+        }
+        if (attributes.containsKey("explain")) {
+            explain = (Boolean) attributes.get("explain");
+        }
+        if (attributes.containsKey("version")) {
+            version = (Boolean) attributes.get("version");
+        }
+        if (attributes.containsKey("seqNoAndPrimaryTerm")) {
+            seqNoAndPrimaryTerm = (Boolean) attributes.get("seqNoAndPrimaryTerm");
+        }
+        if (attributes.containsKey("sorts")) {
+            sorts = (List<SortBuilder<?>>) attributes.get("sorts");
+        }
+        if (attributes.containsKey("trackScores")) {
+            trackScores = (boolean) attributes.get("trackScores");
+        }
+        if (attributes.containsKey("trackTotalHitsUpTo")) {
+            trackTotalHitsUpTo = (Integer) attributes.get("trackTotalHitsUpTo");
+        }
+        if (attributes.containsKey("searchAfter")) {
+            searchAfterBuilder = (SearchAfterBuilder) attributes.get("searchAfter");
+        }
+        if (attributes.containsKey("slice")) {
+            sliceBuilder = (SliceBuilder) attributes.get("slice");
+        }
+        if (attributes.containsKey("minScore")) {
+            minScore = (Float) attributes.get("minScore");
+        }
+        if (attributes.containsKey("timeout")) {
+            timeout = (TimeValue) attributes.get("timeout");
+        }
+        if (attributes.containsKey("terminateAfter")) {
+            terminateAfter = (int) attributes.get("terminateAfter");
+        }
+        if (attributes.containsKey("storedFieldsContext")) {
+            storedFieldsContext = (StoredFieldsContext) attributes.get("storedFieldsContext");
+        }
+        if (attributes.containsKey("docValueFields")) {
+            docValueFields = (List<FieldAndFormat>) attributes.get("docValueFields");
+        }
+        if (attributes.containsKey("scriptFields")) {
+            scriptFields = (List<ScriptField>) attributes.get("scriptFields");
+        }
+        if (attributes.containsKey("fetchSourceContext")) {
+            fetchSourceContext = (FetchSourceContext) attributes.get("fetchSourceContext");
+        }
+        if (attributes.containsKey("fetchFields")) {
+            fetchFields = (List<FieldAndFormat>) attributes.get("fetchFields");
+        }
+        if (attributes.containsKey("aggregations")) {
+            aggregations = (AggregatorFactories.Builder) attributes.get("aggregations");
+        }
+        if (attributes.containsKey("highlight")) {
+            highlightBuilder = (HighlightBuilder) attributes.get("highlight");
+        }
+        if (attributes.containsKey("suggest")) {
+            suggestBuilder = (SuggestBuilder) attributes.get("suggest");
+        }
+        if (attributes.containsKey("rescore")) {
+            rescoreBuilders = (List<RescorerBuilder>) attributes.get("rescore");
+        }
+        if (attributes.containsKey("indexBoosts")) {
+            indexBoosts = (List<IndexBoost>) attributes.get("indexBoosts");
+        }
+        if (attributes.containsKey("stats")) {
+            stats = (List<String>) attributes.get("stats");
+        }
+        if (attributes.containsKey("ext")) {
+            extBuilders = (List<SearchExtBuilder>) attributes.get("ext");
+        }
+        if (attributes.containsKey("profile")) {
+            profile = (boolean) attributes.get("profile");
+        }
+        if (attributes.containsKey("collapse")) {
+            collapse = (CollapseBuilder) attributes.get("collapse");
+        }
+        if (attributes.containsKey("pointInTime")) {
+            pointInTimeBuilder = (PointInTimeBuilder) attributes.get("pointInTime");
+        }
+        return this;
+    }
+    public Map<String, Object> toMap() {
+        // TODO: this is a hack to bypass the map representation of the search source builder
+        // need to add a proper map representation
+        Map<String, Object> attributes = new LinkedHashMap<>();
+
+        if (queryBuilder instanceof MatchQueryBuilder) {
+            attributes.put("query", ((MatchQueryBuilder) queryBuilder).fieldName());
+        }
+
+        if (queryBuilder instanceof QueryStringQueryBuilder) {
+            attributes.put("query", ((QueryStringQueryBuilder) queryBuilder).queryString());
+        }
+
+        attributes.put("postQuery", postQueryBuilder);
+        attributes.put("from", from);
+        attributes.put("size", size);
+        attributes.put("explain", explain);
+        attributes.put("version", version);
+        attributes.put("seqNoAndPrimaryTerm", seqNoAndPrimaryTerm);
+        attributes.put("sorts", sorts);
+        attributes.put("trackScores", trackScores);
+        attributes.put("trackTotalHitsUpTo", trackTotalHitsUpTo);
+        attributes.put("searchAfter", searchAfterBuilder);
+        attributes.put("slice", sliceBuilder);
+        attributes.put("minScore", minScore);
+        attributes.put("timeout", timeout);
+        attributes.put("terminateAfter", terminateAfter);
+        attributes.put("storedFieldsContext", storedFieldsContext);
+        attributes.put("docValueFields", docValueFields);
+        attributes.put("scriptFields", scriptFields);
+        attributes.put("fetchSourceContext", fetchSourceContext);
+        attributes.put("fetchFields", fetchFields);
+        attributes.put("aggregations", aggregations);
+        attributes.put("highlight", highlightBuilder);
+        attributes.put("suggest", suggestBuilder);
+        attributes.put("rescore", rescoreBuilders);
+        attributes.put("indexBoosts", indexBoosts);
+        attributes.put("stats", stats);
+        attributes.put("ext", extBuilders);
+        attributes.put("profile", profile);
+        attributes.put("collapse", collapse);
+        attributes.put("pointInTime", pointInTimeBuilder);
+
+        return attributes;
     }
 
     /**
