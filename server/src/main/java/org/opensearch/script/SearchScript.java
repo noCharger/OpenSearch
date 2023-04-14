@@ -19,7 +19,7 @@ import java.util.Map;
  */
 public abstract class SearchScript {
 
-    public static final String[] PARAMETERS = { "cxt" };
+    public static final String[] PARAMETERS = { "ctx" };
 
     /** The context used to compile {@link SearchScript} factories. */
     public static final ScriptContext<Factory> CONTEXT = new ScriptContext<>(
@@ -42,7 +42,7 @@ public abstract class SearchScript {
         return params;
     }
 
-    public abstract void execute(Map<String, Object> cxt);
+    public abstract void execute(Map<String, Object> ctx);
 
     /**
      * Factory for ingest script

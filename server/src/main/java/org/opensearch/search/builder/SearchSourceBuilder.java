@@ -1560,9 +1560,7 @@ public final class SearchSourceBuilder implements Writeable, ToXContentObject, R
         }
 
         if (queryBuilder instanceof QueryStringQueryBuilder) {
-            String queryString = ((QueryStringQueryBuilder) queryBuilder).queryString();
-            // deep copy of original query string
-            attributes.put("query", queryString.substring(0));
+            attributes.put("query", ((QueryStringQueryBuilder) queryBuilder).queryString());
         }
 
         attributes.put("postQuery", postQueryBuilder);

@@ -84,16 +84,16 @@ public final class ScriptProcessor extends AbstractProcessor implements SearchRe
             searchScript = precompiledSearchScript;
         }
         // convert the search request to a map
-        Map<String, Object> cxt = Map.of("source", request.source().toMap());
+        Map<String, Object> ctx = Map.of("source", request.source().toMap());
         // execute the script with the search request in context
-        searchScript.execute(cxt);
-        CollectionUtils.ensureNoSelfReferences(cxt, "search script");
-        // assert cxt has at least one key and it contains source key
-        if (cxt.isEmpty() || cxt.get("source") == null) {
+        searchScript.execute(ctx);
+        CollectionUtils.ensureNoSelfReferences(ctx, "search script");
+        // assert ctx has at least one key and it contains source key
+        if (ctx.isEmpty() || ctx.get("source") == null) {
             throw new IllegalArgumentException("script must have at least one key");
         }
 
-        Object obj = cxt.get("source");
+        Object obj = ctx.get("source");
         if (obj instanceof Map<?, ?>) {
             Map<?, ?> rawMap = (Map<?, ?>) obj;
             Map<String, Object> resultMap = new LinkedHashMap<>();
