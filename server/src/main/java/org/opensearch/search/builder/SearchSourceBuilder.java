@@ -49,10 +49,7 @@ import org.opensearch.core.xcontent.XContentBuilder;
 import org.opensearch.common.xcontent.XContentHelper;
 import org.opensearch.core.xcontent.XContentParser;
 import org.opensearch.common.xcontent.XContentType;
-import org.opensearch.index.query.MatchQueryBuilder;
-import org.opensearch.index.query.QueryBuilder;
-import org.opensearch.index.query.QueryRewriteContext;
-import org.opensearch.index.query.Rewriteable;
+import org.opensearch.index.query.*;
 import org.opensearch.script.Script;
 import org.opensearch.search.SearchExtBuilder;
 import org.opensearch.search.aggregations.AggregationBuilder;
@@ -1459,6 +1456,11 @@ public final class SearchSourceBuilder implements Writeable, ToXContentObject, R
 //            }
 //        }
 
+        if (queryBuilder instanceof QueryStringQueryBuilder) {
+            String queryString = ((Map) attributes.get("query")).get("string").toString();
+            this.query(new QueryStringQueryBuilder(queryString));
+        }
+
         if (attributes.containsKey("postQuery")) {
             postQueryBuilder = (QueryBuilder) attributes.get("postQuery");
         }
@@ -1556,6 +1558,13 @@ public final class SearchSourceBuilder implements Writeable, ToXContentObject, R
         if (queryBuilder instanceof MatchQueryBuilder) {
             attributes.put("query", ((MatchQueryBuilder) queryBuilder).fieldName());
         }
+
+        if (queryBuilder instanceof QueryStringQueryBuilder) {
+            String queryString = ((QueryStringQueryBuilder) queryBuilder).queryString();
+            // deep copy of original query string
+            attributes.put("query", queryString.substring(0));
+        }
+
         attributes.put("postQuery", postQueryBuilder);
         attributes.put("from", from);
         attributes.put("size", size);
