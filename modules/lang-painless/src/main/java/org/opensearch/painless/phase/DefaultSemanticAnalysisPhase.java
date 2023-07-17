@@ -163,6 +163,9 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import static org.opensearch.painless.lookup.PainlessLookupUtility.typeToCanonicalTypeName;
 import static org.opensearch.painless.symbol.SemanticScope.newFunctionScope;
 
@@ -172,6 +175,9 @@ import static org.opensearch.painless.symbol.SemanticScope.newFunctionScope;
  * valid field resolution, and other specialized validation.
  */
 public class DefaultSemanticAnalysisPhase extends UserTreeBaseVisitor<SemanticScope> {
+
+    private static final Logger logger = LogManager.getLogger(DefaultSemanticAnalysisPhase.class);
+
 
     /**
      * Decorates a user expression node with a PainlessCast.
@@ -1935,10 +1941,10 @@ public class DefaultSemanticAnalysisPhase extends UserTreeBaseVisitor<SemanticSc
 
         if (localFunction == null) {
             importedMethod = scriptScope.getPainlessLookup().lookupImportedPainlessMethod(methodName, userArgumentsSize);
-
+            logger.info("importedMethod: " + importedMethod);
             if (importedMethod == null) {
                 classBinding = scriptScope.getPainlessLookup().lookupPainlessClassBinding(methodName, userArgumentsSize);
-
+                logger.info("classBinding: " + classBinding);
                 // check to see if this class binding requires an implicit this reference
                 if (classBinding != null
                     && classBinding.typeParameters.isEmpty() == false
@@ -1954,6 +1960,7 @@ public class DefaultSemanticAnalysisPhase extends UserTreeBaseVisitor<SemanticSc
                     // as part of its API. However, the situation at run-time is difficult and will modifications that
                     // are a substantial change if even possible to do.
                     classBinding = scriptScope.getPainlessLookup().lookupPainlessClassBinding(methodName, userArgumentsSize + 1);
+                    logger.info("classBinding: " + classBinding);
 
                     if (classBinding != null) {
                         if (classBinding.typeParameters.isEmpty() == false
@@ -1966,7 +1973,7 @@ public class DefaultSemanticAnalysisPhase extends UserTreeBaseVisitor<SemanticSc
 
                     if (classBinding == null) {
                         instanceBinding = scriptScope.getPainlessLookup().lookupPainlessInstanceBinding(methodName, userArgumentsSize);
-
+                        logger.info("instanceBinding: " + instanceBinding);
                         if (instanceBinding == null) {
                             throw userCallLocalNode.createError(
                                 new IllegalArgumentException(

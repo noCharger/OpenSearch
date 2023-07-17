@@ -68,11 +68,9 @@ public final class ScoreScriptUtils {
 
     public static final class Stats {
         private final Map<Object, Object> context;
-        private final ScoreScript scoreScript;
 
-        public Stats(ScoreScript scoreScript, Map<Object, Object> context) {
+        public Stats(Map<Object, Object> context) {
             this.context = context;
-            this.scoreScript = scoreScript;
         }
 
         public float termFreq(String field, String term) {
@@ -81,7 +79,7 @@ public final class ScoreScriptUtils {
 
             try {
                 // Retrieve FunctionValues (does not handle exceptions)
-                FunctionValues values = tfvs.getValues(context, scoreScript.getLeafReaderContext());
+                FunctionValues values = tfvs.getValues(context, ScoreScript.leafReaderContext);
 
                 // Use the FunctionValues to calculate term frequency
                 return values.floatVal(0);

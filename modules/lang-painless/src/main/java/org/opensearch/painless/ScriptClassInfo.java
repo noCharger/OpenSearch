@@ -45,6 +45,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import static java.util.Collections.unmodifiableList;
 import static org.opensearch.painless.WriterConstants.NEEDS_PARAMETER_METHOD_TYPE;
 
@@ -52,6 +56,9 @@ import static org.opensearch.painless.WriterConstants.NEEDS_PARAMETER_METHOD_TYP
  * Information about the interface being implemented by the painless script.
  */
 public class ScriptClassInfo {
+
+    private static final Logger logger = LogManager.getLogger(ScriptClassInfo.class);
+
 
     private final Class<?> baseClass;
     private final org.objectweb.asm.commons.Method executeMethod;
