@@ -77,7 +77,7 @@ public final class ScoreScriptUtils {
 
         // Method to compute term frequency
         public long termFreq(String field, String term) throws IOException {
-            Terms terms = scoreScript.getLeafReaderContext().reader().terms(field);
+            Terms terms = ScoreScript.leafReaderContext.reader().terms(field);
 
             if (terms == null) {
                 return 0;
