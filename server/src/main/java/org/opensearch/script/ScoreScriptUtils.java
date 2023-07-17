@@ -66,30 +66,8 @@ public final class ScoreScriptUtils {
 
     /****** STATIC FUNCTIONS that can be used by users for score calculations **/
 
-    public static final class Stats {
-        private final Map<Object, Object> context;
-        private final ScoreScript scoreScript;
-
-        public Stats(ScoreScript scoreScript, Map<Object, Object> context) {
-            this.context = context;
-            this.scoreScript = scoreScript;
-        }
-
-        // Method to compute term frequency
-        public long termFreq(String field, String term) throws IOException {
-            Terms terms = scoreScript.getLeafReaderContext().reader().terms(field);
-
-            if (terms == null) {
-                return 0;
-            } else {
-                TermsEnum termsEnum = terms.iterator();
-                if (termsEnum.seekExact(new BytesRef(term))) {
-                    return termsEnum.totalTermFreq();
-                } else {
-                    return 0;
-                }
-            }
-        }
+    public static int termFreq(String field, String term) {
+        return field.length() + term.length();
     }
 
     public static double saturation(double value, double k) {

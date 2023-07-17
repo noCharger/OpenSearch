@@ -115,7 +115,7 @@ public abstract class ScoreScript {
     private String indexName = null;
     private Version indexVersion = null;
 
-    private LeafReaderContext leafReaderContext = null;
+    public static LeafReaderContext leafReaderContext = null;
 
     public ScoreScript(Map<String, Object> params, SearchLookup lookup, LeafReaderContext leafContext) {
         // null check needed b/c of expression engine subclass
@@ -131,7 +131,7 @@ public abstract class ScoreScript {
             params.putAll(leafLookup.asMap());
             this.params = new DynamicMap(params, PARAMS_FUNCTIONS);
             this.docBase = leafContext.docBase;
-            this.leafReaderContext = leafContext;
+            ScoreScript.leafReaderContext = leafContext;
         }
     }
 
@@ -147,7 +147,7 @@ public abstract class ScoreScript {
         return leafLookup.doc();
     }
 
-    public LeafReaderContext getLeafReaderContext() {
+    public static LeafReaderContext getLeafReaderContext() {
         return leafReaderContext;
     }
 
