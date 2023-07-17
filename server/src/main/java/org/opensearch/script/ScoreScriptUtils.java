@@ -33,6 +33,8 @@
 package org.opensearch.script;
 
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.Terms;
+import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.queries.function.FunctionValues;
 import org.apache.lucene.queries.function.valuesource.TermFreqValueSource;
 import org.apache.lucene.util.BytesRef;
@@ -60,33 +62,33 @@ import static com.carrotsearch.hppc.BitMixer.mix32;
  */
 public final class ScoreScriptUtils {
 
+
+
     /****** STATIC FUNCTIONS that can be used by users for score calculations **/
 
     public static final class Stats {
-        private static Map<Object, Object> context;
-        private static LeafReaderContext readerContext;
+        private final Map<Object, Object> context;
+        private final ScoreScript scoreScript;
 
         public Stats(ScoreScript scoreScript, Map<Object, Object> context) {
             this.context = context;
-            this.readerContext = scoreScript.getLeafReaderContext();
+            this.scoreScript = scoreScript;
         }
 
-        public static float termFreq(String field, String term) {
-            // Create a TermFreqValueSource
-            TermFreqValueSource tfvs = new TermFreqValueSource(field, term, field, null);
+        // Method to compute term frequency
+        public long termFreq(String field, String term) throws IOException {
+            Terms terms = scoreScript.getLeafReaderContext().reader().terms(field);
 
-            try {
-                // Retrieve FunctionValues (does not handle exceptions)
-                FunctionValues values = tfvs.getValues(context, readerContext);
-
-                // Use the FunctionValues to calculate term frequency
-                return values.floatVal(0);
-            } catch (IOException e) {
-                // Handle exceptions here
+            if (terms == null) {
+                return 0;
+            } else {
+                TermsEnum termsEnum = terms.iterator();
+                if (termsEnum.seekExact(new BytesRef(term))) {
+                    return termsEnum.totalTermFreq();
+                } else {
+                    return 0;
+                }
             }
-
-            // Fallback return value
-            return 0.0f;
         }
     }
 

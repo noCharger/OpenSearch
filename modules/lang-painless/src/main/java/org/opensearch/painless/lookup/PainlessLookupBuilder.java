@@ -88,7 +88,12 @@ import static org.opensearch.painless.lookup.PainlessLookupUtility.typeToCanonic
 import static org.opensearch.painless.lookup.PainlessLookupUtility.typeToJavaType;
 import static org.opensearch.painless.lookup.PainlessLookupUtility.typesToCanonicalTypeNames;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public final class PainlessLookupBuilder {
+
+    private static final Logger logger = LogManager.getLogger(PainlessLookupBuilder.class);
 
     private static final class BridgeLoader extends SecureClassLoader {
         BridgeLoader(ClassLoader parent) {
@@ -192,6 +197,9 @@ public final class PainlessLookupBuilder {
 
                 for (AllowlistClassBinding allowlistClassBinding : allowlist.allowlistClassBindings) {
                     origin = allowlistClassBinding.origin;
+
+//                    logger.info("allowlistClassBinding: " + allowlistClassBinding);
+
                     painlessLookupBuilder.addPainlessClassBinding(
                         allowlist.classLoader,
                         allowlistClassBinding.targetJavaClassName,
@@ -1543,8 +1551,12 @@ public final class PainlessLookupBuilder {
         }
 
         int methodTypeParametersSize = javaMethod.getParameterCount();
+        logger.info("methodTypeParametersSize: " + methodTypeParametersSize);
 
         for (int typeParameterIndex = 0; typeParameterIndex < methodTypeParametersSize; ++typeParameterIndex) {
+            logger.info("typeParameters size: " + typeParameters.size());
+            logger.info("constructorTypeParametersSize: " + constructorTypeParametersSize);
+
             Class<?> typeParameter = typeParameters.get(constructorTypeParametersSize + typeParameterIndex);
 
             if (isValidType(typeParameter) == false) {
