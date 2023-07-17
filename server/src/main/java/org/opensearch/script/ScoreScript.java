@@ -115,6 +115,8 @@ public abstract class ScoreScript {
     private String indexName = null;
     private Version indexVersion = null;
 
+    private LeafReaderContext leafReaderContext = null;
+
     public ScoreScript(Map<String, Object> params, SearchLookup lookup, LeafReaderContext leafContext) {
         // null check needed b/c of expression engine subclass
         if (lookup == null) {
@@ -129,6 +131,7 @@ public abstract class ScoreScript {
             params.putAll(leafLookup.asMap());
             this.params = new DynamicMap(params, PARAMS_FUNCTIONS);
             this.docBase = leafContext.docBase;
+            this.leafReaderContext = leafContext;
         }
     }
 
@@ -142,6 +145,10 @@ public abstract class ScoreScript {
     /** The doc lookup for the Lucene segment this script was created for. */
     public Map<String, ScriptDocValues<?>> getDoc() {
         return leafLookup.doc();
+    }
+
+    public LeafReaderContext getLeafReaderContext() {
+        return leafReaderContext;
     }
 
     /** Set the current document to run the script on next. */

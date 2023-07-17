@@ -32,6 +32,9 @@
 
 package org.opensearch.script;
 
+import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.queries.function.FunctionValues;
+import org.apache.lucene.queries.function.valuesource.TermFreqValueSource;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.StringHelper;
 import org.opensearch.ExceptionsHelper;
@@ -44,7 +47,9 @@ import org.opensearch.common.unit.TimeValue;
 import org.opensearch.index.fielddata.ScriptDocValues;
 import org.opensearch.index.mapper.DateFieldMapper;
 
+import java.io.IOException;
 import java.time.ZoneId;
+import java.util.Map;
 
 import static com.carrotsearch.hppc.BitMixer.mix32;
 
@@ -56,6 +61,34 @@ import static com.carrotsearch.hppc.BitMixer.mix32;
 public final class ScoreScriptUtils {
 
     /****** STATIC FUNCTIONS that can be used by users for score calculations **/
+
+    public static final class Stats {
+        private static Map<Object, Object> context;
+        private static LeafReaderContext readerContext;
+
+        public Stats(ScoreScript scoreScript, Map<Object, Object> context) {
+            this.context = context;
+            this.readerContext = scoreScript.getLeafReaderContext();
+        }
+
+        public static float termFreq(String field, String term) {
+            // Create a TermFreqValueSource
+            TermFreqValueSource tfvs = new TermFreqValueSource(field, term, field, null);
+
+            try {
+                // Retrieve FunctionValues (does not handle exceptions)
+                FunctionValues values = tfvs.getValues(context, readerContext);
+
+                // Use the FunctionValues to calculate term frequency
+                return values.floatVal(0);
+            } catch (IOException e) {
+                // Handle exceptions here
+            }
+
+            // Fallback return value
+            return 0.0f;
+        }
+    }
 
     public static double saturation(double value, double k) {
         return value / (k + value);
@@ -84,7 +117,6 @@ public final class ScoreScriptUtils {
             this.docValues = scoreScript.getDoc().get(fieldName);
             int salt = (scoreScript._getIndex().hashCode() << 10) | scoreScript._getShardId();
             this.saltedSeed = mix32(salt ^ seed);
-
         }
 
         public double randomScore() {
