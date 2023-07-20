@@ -50,6 +50,8 @@ import java.io.UncheckedIOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -130,8 +132,6 @@ public class ExpertScriptPlugin extends Plugin implements ScriptPlugin {
             private final Map<String, Object> params;
             private final SearchLookup lookup;
 
-            Map<String, PostingsEnum> fieldPostings = new HashMap<>();
-
             private PureDfLeafFactory(
                         Map<String, Object> params, SearchLookup lookup) {
 
@@ -149,6 +149,7 @@ public class ExpertScriptPlugin extends Plugin implements ScriptPlugin {
                     throws IOException {
 
                 Map<String, PostingsEnum> fieldPostings = new HashMap<>();
+                String term = params.get("term").toString();
                 for (Object fieldObj : (List<?>)params.get("fields")) {
                     String field = fieldObj.toString();
                     PostingsEnum postings = context.reader().postings(new Term(field, term));
