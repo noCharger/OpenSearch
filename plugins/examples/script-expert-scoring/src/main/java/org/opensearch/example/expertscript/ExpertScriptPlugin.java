@@ -90,7 +90,7 @@ public class ExpertScriptPlugin extends Plugin implements ScriptPlugin {
                         + context.name + "]");
             }
             // we use the script "source" as the script identifier
-            if ("pure_df".equals(scriptSource)) {
+            if ("custom_tf".equals(scriptSource)) {
                 ScoreScript.Factory factory = new PureDfFactory();
                 return context.factoryClazz.cast(factory);
             }
@@ -129,23 +129,14 @@ public class ExpertScriptPlugin extends Plugin implements ScriptPlugin {
         private static class PureDfLeafFactory implements LeafFactory {
             private final Map<String, Object> params;
             private final SearchLookup lookup;
-            private final String field;
-            private final String term;
+
+            Map<String, PostingsEnum> fieldPostings = new HashMap<>();
 
             private PureDfLeafFactory(
                         Map<String, Object> params, SearchLookup lookup) {
-                if (params.containsKey("field") == false) {
-                    throw new IllegalArgumentException(
-                            "Missing parameter [field]");
-                }
-                if (params.containsKey("term") == false) {
-                    throw new IllegalArgumentException(
-                            "Missing parameter [term]");
-                }
+
                 this.params = params;
                 this.lookup = lookup;
-                field = params.get("field").toString();
-                term = params.get("term").toString();
             }
 
             @Override
@@ -156,53 +147,47 @@ public class ExpertScriptPlugin extends Plugin implements ScriptPlugin {
             @Override
             public ScoreScript newInstance(LeafReaderContext context)
                     throws IOException {
-                PostingsEnum postings = context.reader().postings(
-                        new Term(field, term));
-                if (postings == null) {
-                    /*
-                     * the field and/or term don't exist in this segment,
-                     * so always return 0
-                     */
-                    return new ScoreScript(params, lookup, context) {
-                        @Override
-                        public double execute(
-                            ExplanationHolder explanation
-                        ) {
-                            return 0.0d;
-                        }
-                    };
+
+                Map<String, PostingsEnum> fieldPostings = new HashMap<>();
+                for (Object fieldObj : (List<?>)params.get("fields")) {
+                    String field = fieldObj.toString();
+                    PostingsEnum postings = context.reader().postings(new Term(field, term));
+                    fieldPostings.put(field, postings);
                 }
+
+                double multiplier = ((Number) params.get("multiplier")).doubleValue();
+                double defaultValue = ((Number) params.get("default_value")).doubleValue();
+
                 return new ScoreScript(params, lookup, context) {
                     int currentDocid = -1;
                     @Override
                     public void setDocument(int docid) {
-                        /*
-                         * advance has undefined behavior calling with
-                         * a docid <= its current docid
-                         */
-                        if (postings.docID() < docid) {
-                            try {
-                                postings.advance(docid);
-                            } catch (IOException e) {
-                                throw new UncheckedIOException(e);
+                        currentDocid = docid;
+                        for (PostingsEnum postings : fieldPostings.values()) {
+                            if (postings != null && postings.docID() < docid) {
+                                try {
+                                    postings.advance(docid);
+                                    return;
+                                } catch (IOException e) {
+                                    throw new UncheckedIOException(e);
+                                }
                             }
                         }
-                        currentDocid = docid;
                     }
+
                     @Override
                     public double execute(ExplanationHolder explanation) {
-                        if (postings.docID() != currentDocid) {
-                            /*
-                             * advance moved past the current doc, so this
-                             * doc has no occurrences of the term
-                             */
-                            return 0.0d;
+                        for (Map.Entry<String, PostingsEnum> entry : fieldPostings.entrySet()) {
+                            PostingsEnum postings = entry.getValue();
+                            if (postings != null && postings.docID() == currentDocid) {
+                                try {
+                                    return multiplier * postings.freq();
+                                } catch (IOException e) {
+                                    throw new UncheckedIOException(e);
+                                }
+                            }
                         }
-                        try {
-                            return postings.freq();
-                        } catch (IOException e) {
-                            throw new UncheckedIOException(e);
-                        }
+                        return defaultValue;
                     }
                 };
             }
