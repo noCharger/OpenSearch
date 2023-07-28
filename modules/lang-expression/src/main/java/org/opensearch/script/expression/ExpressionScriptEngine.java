@@ -111,7 +111,7 @@ public class ExpressionScriptEngine implements ScriptEngine {
 
         contexts.put(ScoreScript.CONTEXT, (Expression expr) -> new ScoreScript.Factory() {
             @Override
-            public ScoreScript.LeafFactory newFactory(Map<String, Object> params, SearchLookup lookup, IndexSearcher indexSearcher) {
+            public ScoreScript.LeafFactory newFactory(Map<String, Object> params, SearchLookup lookup) {
                 return newScoreScript(expr, lookup, params);
             }
 

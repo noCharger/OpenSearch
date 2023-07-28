@@ -33,15 +33,10 @@
 package org.opensearch.search.lookup;
 
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.queries.function.FunctionValues;
-import org.apache.lucene.queries.function.valuesource.SumTotalTermFreqValueSource;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queries.function.valuesource.TFValueSource;
 import org.apache.lucene.queries.function.valuesource.TermFreqValueSource;
-import org.apache.lucene.queries.function.valuesource.TotalTermFreqValueSource;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.util.BytesRef;
 import org.opensearch.common.lucene.BytesRefs;
-import org.opensearch.core.util.BytesRefUtils;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -108,17 +103,12 @@ public class LeafSearchLookup {
         return valueSource.getValues(null, ctx).floatVal(docId);
     }
 
-    public long totalTermFreq(String field, String term, int docId, IndexSearcher indexSearcher) throws IOException {
-        TotalTermFreqValueSource valueSource = new TotalTermFreqValueSource(field, term, field, BytesRefs.toBytesRef(term));
-        Map context = new HashMap();
-        valueSource.createWeight(context, indexSearcher);
-        return valueSource.getValues(context, ctx).longVal(docId);
+    public long totalTermFreq(String field, String val) throws IOException {
+        Term term = new Term(field, BytesRefs.toBytesRef(val));
+        return ctx.reader().totalTermFreq(term);
     }
 
-    public long sumTotalTermFreq(String field, int docId, IndexSearcher indexSearcher) throws IOException {
-        SumTotalTermFreqValueSource valueSource = new SumTotalTermFreqValueSource(field);
-        Map context = new HashMap();
-        valueSource.createWeight(context, indexSearcher);
-        return valueSource.getValues(context, ctx).longVal(docId);
+    public long sumTotalTermFreq(String field) throws IOException {
+        return ctx.reader().getSumTotalTermFreq(field);
     }
 }

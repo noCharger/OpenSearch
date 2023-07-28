@@ -116,8 +116,7 @@ public abstract class ScoreScript {
     private String indexName = null;
     private Version indexVersion = null;
 
-    private final IndexSearcher indexSearcher;
-    public ScoreScript(Map<String, Object> params, SearchLookup lookup, LeafReaderContext leafContext, IndexSearcher indexSearcher) {
+    public ScoreScript(Map<String, Object> params, SearchLookup lookup, LeafReaderContext leafContext) {
         // null check needed b/c of expression engine subclass
         if (lookup == null) {
             assert params == null;
@@ -125,14 +124,12 @@ public abstract class ScoreScript {
             this.params = null;
             this.leafLookup = null;
             this.docBase = 0;
-            this.indexSearcher = null;
         } else {
             this.leafLookup = lookup.getLeafSearchLookup(leafContext);
             params = new HashMap<>(params);
             params.putAll(leafLookup.asMap());
             this.params = new DynamicMap(params, PARAMS_FUNCTIONS);
             this.docBase = leafContext.docBase;
-            this.indexSearcher = indexSearcher;
         }
     }
 
@@ -166,15 +163,15 @@ public abstract class ScoreScript {
 
     public long totalTermFreq(String field, String term) throws IOException {
         try {
-            return leafLookup.totalTermFreq(field, term, docId, indexSearcher);
+            return leafLookup.totalTermFreq(field, term);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
     }
 
-    public long sumTotalTermFreq(String field, String term) throws IOException {
+    public long sumTotalTermFreq(String field) throws IOException {
         try {
-            return leafLookup.sumTotalTermFreq(field, docId, indexSearcher);
+            return leafLookup.sumTotalTermFreq(field);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -304,7 +301,7 @@ public abstract class ScoreScript {
      */
     public interface Factory extends ScriptFactory {
 
-        ScoreScript.LeafFactory newFactory(Map<String, Object> params, SearchLookup lookup, IndexSearcher indexSearcher);
+        ScoreScript.LeafFactory newFactory(Map<String, Object> params, SearchLookup lookup);
 
     }
 

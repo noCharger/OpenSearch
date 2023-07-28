@@ -125,9 +125,9 @@ public final class ScoreScriptUtils {
             this.scoreScript = scoreScript;
         }
 
-        public long sumTotalTermFreq(String fieldName, String term) {
+        public long sumTotalTermFreq(String fieldName) {
             try {
-                return scoreScript.sumTotalTermFreq(fieldName, term);
+                return scoreScript.sumTotalTermFreq(fieldName);
             } catch (Exception e) {
                 throw ExceptionsHelper.convertToOpenSearchException(e);
             }
