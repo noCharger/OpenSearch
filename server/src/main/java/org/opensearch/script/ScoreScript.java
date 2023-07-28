@@ -146,9 +146,17 @@ public abstract class ScoreScript {
         return leafLookup.doc();
     }
 
-    public int getTermfreq(String field, String term) {
+    public int termFreq(String field, String term) {
         try {
             return leafLookup.termfreq(field, term, docId);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    public float tf(String field, String term) {
+        try {
+            return leafLookup.tf(field, term, docId);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

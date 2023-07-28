@@ -34,7 +34,10 @@ package org.opensearch.search.lookup;
 
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.queries.function.FunctionValues;
+import org.apache.lucene.queries.function.valuesource.SumTotalTermFreqValueSource;
+import org.apache.lucene.queries.function.valuesource.TFValueSource;
 import org.apache.lucene.queries.function.valuesource.TermFreqValueSource;
+import org.apache.lucene.queries.function.valuesource.TotalTermFreqValueSource;
 import org.apache.lucene.util.BytesRef;
 import org.opensearch.common.lucene.BytesRefs;
 import org.opensearch.core.util.BytesRefUtils;
@@ -95,7 +98,12 @@ public class LeafSearchLookup {
     }
 
     public int termfreq(String field, String term, int docId) throws IOException {
-        TermFreqValueSource value = new TermFreqValueSource(field, term, field, BytesRefs.toBytesRef(term));
-        return value.getValues(null, ctx).intVal(docId);
+        TermFreqValueSource valueSource = new TermFreqValueSource(field, term, field, BytesRefs.toBytesRef(term));
+        return valueSource.getValues(null, ctx).intVal(docId);
+    }
+
+    public float tf(String field, String term, int docId) throws IOException {
+        TFValueSource valueSource = new TFValueSource(field, term, field, BytesRefs.toBytesRef(term));
+        return valueSource.getValues(null, ctx).floatVal(docId);
     }
 }

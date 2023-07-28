@@ -78,7 +78,15 @@ public final class ScoreScriptUtils {
 
         public int termFreq(String fieldName, String fieldVal) {
             try {
-                return scoreScript.getTermfreq(fieldName, fieldVal);
+                return scoreScript.termFreq(fieldName, fieldVal);
+            } catch (Exception e) {
+                throw ExceptionsHelper.convertToOpenSearchException(e);
+            }
+        }
+
+        public float tf(String fieldName, String fieldVal) {
+            try {
+                return scoreScript.tf(fieldName, fieldVal);
             } catch (Exception e) {
                 throw ExceptionsHelper.convertToOpenSearchException(e);
             }
