@@ -69,30 +69,70 @@ public final class ScoreScriptUtils {
         return Math.pow(value, a) / (Math.pow(k, a) + Math.pow(value, a));
     }
 
-    public static final class FieldStats {
+    public static final class TermFreq {
         private final ScoreScript scoreScript;
 
-        public FieldStats(ScoreScript scoreScript) {
+        public TermFreq(ScoreScript scoreScript) {
             this.scoreScript = scoreScript;
         }
 
-        public int termFreq(String fieldName, String fieldVal) {
+        public int termFreq(String fieldName, String term) {
             try {
-                return scoreScript.termFreq(fieldName, fieldVal);
-            } catch (Exception e) {
-                throw ExceptionsHelper.convertToOpenSearchException(e);
-            }
-        }
-
-        public float tf(String fieldName, String fieldVal) {
-            try {
-                return scoreScript.tf(fieldName, fieldVal);
+                return scoreScript.termFreq(fieldName, term);
             } catch (Exception e) {
                 throw ExceptionsHelper.convertToOpenSearchException(e);
             }
         }
     }
 
+    public static final class TF {
+        private final ScoreScript scoreScript;
+
+        public TF(ScoreScript scoreScript) {
+            this.scoreScript = scoreScript;
+        }
+
+        public float tf(String fieldName, String term) {
+            try {
+                return scoreScript.tf(fieldName, term);
+            } catch (Exception e) {
+                throw ExceptionsHelper.convertToOpenSearchException(e);
+            }
+        }
+    }
+
+    public static final class TotalTermFreq {
+        private final ScoreScript scoreScript;
+
+        public TotalTermFreq(ScoreScript scoreScript) {
+            this.scoreScript = scoreScript;
+        }
+
+        public long totalTermFreq(String fieldName, String term) {
+            try {
+                return scoreScript.totalTermFreq(fieldName, term);
+            } catch (Exception e) {
+                throw ExceptionsHelper.convertToOpenSearchException(e);
+            }
+        }
+    }
+
+
+    public static final class SumTotalTermFreq {
+        private final ScoreScript scoreScript;
+
+        public SumTotalTermFreq(ScoreScript scoreScript) {
+            this.scoreScript = scoreScript;
+        }
+
+        public long sumTotalTermFreq(String fieldName, String term) {
+            try {
+                return scoreScript.sumTotalTermFreq(fieldName, term);
+            } catch (Exception e) {
+                throw ExceptionsHelper.convertToOpenSearchException(e);
+            }
+        }
+    }
 
     /**
      * random score based on the documents' values of the given field

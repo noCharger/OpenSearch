@@ -38,6 +38,7 @@ import org.apache.lucene.queries.function.valuesource.SumTotalTermFreqValueSourc
 import org.apache.lucene.queries.function.valuesource.TFValueSource;
 import org.apache.lucene.queries.function.valuesource.TermFreqValueSource;
 import org.apache.lucene.queries.function.valuesource.TotalTermFreqValueSource;
+import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.util.BytesRef;
 import org.opensearch.common.lucene.BytesRefs;
 import org.opensearch.core.util.BytesRefUtils;
@@ -97,7 +98,7 @@ public class LeafSearchLookup {
         fieldsLookup.setDocument(docId);
     }
 
-    public int termfreq(String field, String term, int docId) throws IOException {
+    public int termFreq(String field, String term, int docId) throws IOException {
         TermFreqValueSource valueSource = new TermFreqValueSource(field, term, field, BytesRefs.toBytesRef(term));
         return valueSource.getValues(null, ctx).intVal(docId);
     }
@@ -105,5 +106,19 @@ public class LeafSearchLookup {
     public float tf(String field, String term, int docId) throws IOException {
         TFValueSource valueSource = new TFValueSource(field, term, field, BytesRefs.toBytesRef(term));
         return valueSource.getValues(null, ctx).floatVal(docId);
+    }
+
+    public long totalTermFreq(String field, String term, int docId, IndexSearcher indexSearcher) throws IOException {
+        TotalTermFreqValueSource valueSource = new TotalTermFreqValueSource(field, term, field, BytesRefs.toBytesRef(term));
+        Map context = new HashMap();
+        valueSource.createWeight(context, indexSearcher);
+        return valueSource.getValues(context, ctx).longVal(docId);
+    }
+
+    public long sumTotalTermFreq(String field, int docId, IndexSearcher indexSearcher) throws IOException {
+        SumTotalTermFreqValueSource valueSource = new SumTotalTermFreqValueSource(field);
+        Map context = new HashMap();
+        valueSource.createWeight(context, indexSearcher);
+        return valueSource.getValues(context, ctx).longVal(docId);
     }
 }
