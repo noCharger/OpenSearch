@@ -69,6 +69,23 @@ public final class ScoreScriptUtils {
         return Math.pow(value, a) / (Math.pow(k, a) + Math.pow(value, a));
     }
 
+    public static final class FieldStats {
+        private final ScoreScript scoreScript;
+
+        public FieldStats(ScoreScript scoreScript) {
+            this.scoreScript = scoreScript;
+        }
+
+        public int termFreq(String fieldName, String fieldVal) {
+            try {
+                return scoreScript.getTermfreq(fieldName, fieldVal);
+            } catch (Exception e) {
+                throw ExceptionsHelper.convertToOpenSearchException(e);
+            }
+        }
+    }
+
+
     /**
      * random score based on the documents' values of the given field
      *

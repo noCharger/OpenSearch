@@ -78,10 +78,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  * Registers Painless as a plugin.
  */
 public final class PainlessModulePlugin extends Plugin implements ScriptPlugin, ExtensiblePlugin, ActionPlugin {
+
+    private static final Logger logger = LogManager.getLogger(PainlessModulePlugin.class);
 
     private static final Map<ScriptContext<?>, List<Allowlist>> allowlists;
 
@@ -99,6 +104,7 @@ public final class PainlessModulePlugin extends Plugin implements ScriptPlugin, 
         map.put(MovingFunctionScript.CONTEXT, movFn);
 
         // Functions used for scoring docs
+        logger.info("clingzhi: " + "org.opensearch.score.txt");
         List<Allowlist> scoreFn = new ArrayList<>(Allowlist.BASE_ALLOWLISTS);
         scoreFn.add(AllowlistLoader.loadFromResourceFiles(Allowlist.class, "org.opensearch.score.txt"));
         map.put(ScoreScript.CONTEXT, scoreFn);

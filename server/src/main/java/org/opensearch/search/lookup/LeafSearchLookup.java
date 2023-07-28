@@ -33,7 +33,13 @@
 package org.opensearch.search.lookup;
 
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.queries.function.FunctionValues;
+import org.apache.lucene.queries.function.valuesource.TermFreqValueSource;
+import org.apache.lucene.util.BytesRef;
+import org.opensearch.common.lucene.BytesRefs;
+import org.opensearch.core.util.BytesRefUtils;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -86,5 +92,10 @@ public class LeafSearchLookup {
         docMap.setDocument(docId);
         sourceLookup.setSegmentAndDocument(ctx, docId);
         fieldsLookup.setDocument(docId);
+    }
+
+    public int termfreq(String field, String term, int docId) throws IOException {
+        TermFreqValueSource value = new TermFreqValueSource(field, term, field, BytesRefs.toBytesRef(term));
+        return value.getValues(null, ctx).intVal(docId);
     }
 }

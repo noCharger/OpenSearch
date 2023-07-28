@@ -19,10 +19,12 @@
 
 # This file contains an allowlist for functions to be used in Score context
 
-class org.opensearch.script.ScoreScript @no_import {
+class org.opensearch.script.ScoreScript {
+    int getTermfreq(String, String)
 }
 
 static_import {
+    int termFreq(org.opensearch.script.ScoreScript, String, String) bound_to org.opensearch.script.ScoreScriptUtils$FieldStats
     double saturation(double, double) from_class org.opensearch.script.ScoreScriptUtils
     double sigmoid(double, double, double) from_class org.opensearch.script.ScoreScriptUtils
     double randomScore(org.opensearch.script.ScoreScript, int, String) bound_to org.opensearch.script.ScoreScriptUtils$RandomScoreField

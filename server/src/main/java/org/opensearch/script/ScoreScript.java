@@ -32,6 +32,8 @@
 package org.opensearch.script;
 
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.queries.function.valuesource.TermFreqValueSource;
 import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.Scorable;
 import org.opensearch.Version;
@@ -142,6 +144,14 @@ public abstract class ScoreScript {
     /** The doc lookup for the Lucene segment this script was created for. */
     public Map<String, ScriptDocValues<?>> getDoc() {
         return leafLookup.doc();
+    }
+
+    public int getTermfreq(String field, String term) {
+        try {
+            return leafLookup.termfreq(field, term, docId);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     /** Set the current document to run the script on next. */
