@@ -9,6 +9,11 @@
 package org.opensearch.search.pipeline.common.helpers;
 
 import org.opensearch.action.search.SearchRequest;
+import org.opensearch.common.unit.TimeValue;
+import org.opensearch.common.xcontent.LoggingDeprecationHandler;
+import org.opensearch.common.xcontent.XContentType;
+import org.opensearch.core.xcontent.NamedXContentRegistry;
+import org.opensearch.core.xcontent.XContentParser;
 import org.opensearch.search.builder.SearchSourceBuilder;
 
 import java.util.Collection;
@@ -17,6 +22,9 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+
+import static org.opensearch.index.query.AbstractQueryBuilder.parseInnerQueryBuilder;
+import static org.opensearch.search.builder.SearchSourceBuilder.TIMEOUT_FIELD;
 
 /**
  * A custom implementation of {@link Map} that provides access to the properties of a {@link SearchRequest}'s
@@ -115,6 +123,12 @@ public class SearchRequestMap implements Map<String, Object> {
                 return source.terminateAfter();
             case "profile":
                 return source.profile();
+            case "timeout":
+                return source.timeout().toString();
+            case "stats":
+                return source.stats();
+            case "query":
+                return null;
             default:
                 throw new SearchRequestMapProcessingException("Unsupported key: " + key);
         }
@@ -164,9 +178,20 @@ public class SearchRequestMap implements Map<String, Object> {
                 case "profile":
                     source.profile((Boolean) value);
                     break;
-                case "stats": // Not modifying stats, sorts, docvalue_fields, etc. as they require more complex handling
-                case "sort":
                 case "timeout":
+                    source.timeout(TimeValue.parseTimeValue((String) value, null, TIMEOUT_FIELD.getPreferredName()));
+                    break;
+//                case "stats": // Not modifying stats, sorts, docvalue_fields, etc. as they require more complex handling
+//                    if (value instanceof String) {
+//                        source.stats(Collections.singletonList((String) value));
+//                    }
+//                    source.stats((List<String>) value);
+                case "query":
+                    XContentParser parser = XContentType.JSON.xContent()
+                        .createParser(NamedXContentRegistry.EMPTY, LoggingDeprecationHandler.INSTANCE, (String) value);
+                    source.query(parseInnerQueryBuilder(parser));
+                    break;
+                case "sort":
                 case "docvalue_fields":
                 case "indices_boost":
                 default:
