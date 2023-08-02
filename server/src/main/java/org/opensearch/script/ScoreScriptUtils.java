@@ -76,9 +76,9 @@ public final class ScoreScriptUtils {
             this.scoreScript = scoreScript;
         }
 
-        public int termFreq(String fieldName, String term) {
+        public int termFreq(String field, String term) {
             try {
-                return scoreScript.termFreq(fieldName, term);
+                return (int) scoreScript.getTermFrequency("termFreq", field, term);
             } catch (Exception e) {
                 throw ExceptionsHelper.convertToOpenSearchException(e);
             }
@@ -92,9 +92,9 @@ public final class ScoreScriptUtils {
             this.scoreScript = scoreScript;
         }
 
-        public float tf(String fieldName, String term) {
+        public float tf(String field, String term) {
             try {
-                return scoreScript.tf(fieldName, term);
+                return (float) scoreScript.getTermFrequency("tf", field, term);
             } catch (Exception e) {
                 throw ExceptionsHelper.convertToOpenSearchException(e);
             }
@@ -108,9 +108,9 @@ public final class ScoreScriptUtils {
             this.scoreScript = scoreScript;
         }
 
-        public long totalTermFreq(String fieldName, String term) {
+        public long totalTermFreq(String field, String term) {
             try {
-                return scoreScript.totalTermFreq(fieldName, term);
+                return (long) scoreScript.getTermFrequency("totalTermFreq", field, term);
             } catch (Exception e) {
                 throw ExceptionsHelper.convertToOpenSearchException(e);
             }
@@ -124,9 +124,9 @@ public final class ScoreScriptUtils {
             this.scoreScript = scoreScript;
         }
 
-        public long sumTotalTermFreq(String fieldName) {
+        public long sumTotalTermFreq(String field) {
             try {
-                return scoreScript.sumTotalTermFreq(fieldName);
+                return (long) scoreScript.getTermFrequency("sumTotalTermFreq", field, null);
             } catch (Exception e) {
                 throw ExceptionsHelper.convertToOpenSearchException(e);
             }

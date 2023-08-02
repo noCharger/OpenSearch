@@ -33,12 +33,7 @@
 package org.opensearch.search.lookup;
 
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.queries.function.valuesource.SumTotalTermFreqValueSource;
-import org.apache.lucene.queries.function.valuesource.TFValueSource;
-import org.apache.lucene.queries.function.valuesource.TermFreqValueSource;
-import org.apache.lucene.queries.function.valuesource.TotalTermFreqValueSource;
-import org.apache.lucene.search.IndexSearcher;
-import org.opensearch.common.lucene.BytesRefs;
+import org.opensearch.index.query.functionscore.TermFrequencyFunction;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -95,29 +90,7 @@ public class LeafSearchLookup {
         fieldsLookup.setDocument(docId);
     }
 
-    public int termFreq(String field, String term, int docId) throws IOException {
-        TermFreqValueSource valueSource = new TermFreqValueSource(field, term, field, BytesRefs.toBytesRef(term));
-        return valueSource.getValues(null, ctx).intVal(docId);
-    }
-
-    public float tf(String field, String term, int docId, IndexSearcher indexSearcher) throws IOException {
-        TFValueSource valueSource = new TFValueSource(field, term, field, BytesRefs.toBytesRef(term));
-        Map context = new HashMap();
-        context.put("searcher", indexSearcher);
-        return valueSource.getValues(context, ctx).floatVal(docId);
-    }
-
-    public long totalTermFreq(String field, String term, int docId, IndexSearcher indexSearcher) throws IOException {
-        TotalTermFreqValueSource valueSource = new TotalTermFreqValueSource(field, term, field, BytesRefs.toBytesRef(term));
-        Map context = new HashMap();
-        valueSource.createWeight(context, indexSearcher);
-        return valueSource.getValues(context, ctx).longVal(docId);
-    }
-
-    public long sumTotalTermFreq(String field, int docId, IndexSearcher indexSearcher) throws IOException {
-        SumTotalTermFreqValueSource valueSource = new SumTotalTermFreqValueSource(field);
-        Map context = new HashMap();
-        valueSource.createWeight(context, indexSearcher);
-        return valueSource.getValues(context, ctx).longVal(docId);
+    public Object executeTermFrequencyFunction(TermFrequencyFunction function) throws IOException {
+        return function.execute(ctx);
     }
 }

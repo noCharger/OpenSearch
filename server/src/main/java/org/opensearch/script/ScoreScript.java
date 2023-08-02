@@ -49,6 +49,8 @@ import java.util.Map;
 import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 
+import static org.opensearch.index.query.functionscore.TermFrequencyFunction.TermFrequencyFunctionFactory.createFunction;
+
 /**
  * A script used for adjusting the score on a per document basis.
  *
@@ -149,33 +151,12 @@ public abstract class ScoreScript {
         return leafLookup.doc();
     }
 
-    public int termFreq(String field, String term) {
+    public Object getTermFrequency(String functionName, String field, String term) {
         try {
-            return leafLookup.termFreq(field, term, docId);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    public float tf(String field, String term) {
-        try {
-            return leafLookup.tf(field, term, docId, indexSearcher);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    public long totalTermFreq(String field, String term) throws IOException {
-        try {
-            return leafLookup.totalTermFreq(field, term, docId, indexSearcher);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    public long sumTotalTermFreq(String field) throws IOException {
-        try {
-            return leafLookup.sumTotalTermFreq(field, docId, indexSearcher);
+            Map<Object, Object> context = new HashMap<>() {{
+                put("searcher", indexSearcher);
+            }};
+            return leafLookup.executeTermFrequencyFunction(createFunction(functionName, field, term, docId, context));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
