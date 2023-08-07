@@ -9,14 +9,23 @@
 package org.opensearch.search.pipeline.common.helpers;
 
 import org.opensearch.action.search.SearchRequest;
+import org.opensearch.cluster.ClusterModule;
 import org.opensearch.common.unit.TimeValue;
 import org.opensearch.common.xcontent.LoggingDeprecationHandler;
+import org.opensearch.common.xcontent.XContentFactory;
 import org.opensearch.common.xcontent.XContentType;
+import org.opensearch.common.xcontent.json.JsonXContent;
+import org.opensearch.core.ParseField;
+import org.opensearch.core.xcontent.DeprecationHandler;
 import org.opensearch.core.xcontent.NamedXContentRegistry;
+import org.opensearch.core.xcontent.XContentBuilder;
 import org.opensearch.core.xcontent.XContentParser;
+import org.opensearch.index.query.MatchAllQueryBuilder;
+import org.opensearch.index.query.QueryBuilder;
 import org.opensearch.search.builder.SearchSourceBuilder;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -187,8 +196,17 @@ public class SearchRequestMap implements Map<String, Object> {
 //                    }
 //                    source.stats((List<String>) value);
                 case "query":
-                    XContentParser parser = XContentType.JSON.xContent()
-                        .createParser(NamedXContentRegistry.EMPTY, LoggingDeprecationHandler.INSTANCE, (String) value);
+
+                    XContentParser parser = JsonXContent.jsonXContent.createParser(
+                        new NamedXContentRegistry(
+                            List.of(new NamedXContentRegistry.Entry(QueryBuilder.class, new ParseField(MatchAllQueryBuilder.NAME), p -> parseInnerQueryBuilder(p)))
+                        ),
+                        DeprecationHandler.THROW_UNSUPPORTED_OPERATION,
+                        (String) value
+                    );
+
+//                    XContentParser parser = XContentType.JSON.xContent()
+//                        .createParser(NamedXContentRegistry.EMPTY, LoggingDeprecationHandler.INSTANCE, (String) value);
                     source.query(parseInnerQueryBuilder(parser));
                     break;
                 case "sort":
