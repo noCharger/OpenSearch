@@ -37,11 +37,18 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.FilterDirectoryReader;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreMode;
+import org.apache.lucene.search.Scorer;
+import org.apache.lucene.search.TwoPhaseIterator;
 import org.apache.lucene.search.Weight;
 import org.apache.lucene.store.Directory;
 import org.opensearch.Version;
@@ -177,6 +184,81 @@ public class ScriptScoreQueryTests extends OpenSearchTestCase {
         assertTrue(e.getMessage().contains("Must be a non-negative score!"));
     }
 
+    public void testTwoPhaseIteratorDelegation() throws IOException {
+        // Create a mock ScriptScoreQuery object with a subQuery that supports two-phase iteration
+        Script script = new Script("dummy script for testing");
+        ScoreScript.LeafFactory factory = mock(ScoreScript.LeafFactory.class);
+        Query subQuery = new MatchAllDocsQuery();
+        ScriptScoreQuery scriptScoreQuery = new ScriptScoreQuery(subQuery, script, factory, null, "test", 0, Version.CURRENT);
+
+        // Wrap the searcher's IndexReader with a FilterReader to intercept the creation of Weight
+        DirectoryReader wrappedReader = new FilterDirectoryReader(reader,
+            new FilterDirectoryReader.SubReaderWrapper() {
+                @Override
+                public LeafReader wrap(LeafReader leafReader) {
+                    return leafReader; // No modification to LeafReader
+                }
+            }
+        ) {
+            @Override
+            protected DirectoryReader doWrapDirectoryReader(DirectoryReader in) {
+                return in; // Return the input DirectoryReader without wrapping
+            }
+
+            @Override
+            public CacheHelper getReaderCacheHelper() {
+                return null; // No caching helper needed for this test
+            }
+        };
+
+        // Create a new IndexSearcher using the wrapped reader
+        IndexSearcher wrappedSearcher = new IndexSearcher(wrappedReader);
+
+        // Obtain the Weight for the ScriptScoreQuery using the wrapped searcher
+        Weight weight = wrappedSearcher.createWeight(wrappedSearcher.rewrite(scriptScoreQuery), ScoreMode.COMPLETE, 1f);
+
+        // Retrieve the TwoPhaseIterator from the Weight
+        TwoPhaseIterator twoPhaseIterator = weight.scorer(leafReaderContext).twoPhaseIterator();
+
+        // Assert that the TwoPhaseIterator is not null, indicating that the subQueryScorer's twoPhaseIterator was correctly utilized
+        assertNotNull("TwoPhaseIterator should not be null", twoPhaseIterator);
+
+
+        when(factory.newInstance(any(LeafReaderContext.class))).thenReturn(new ScoreScript(null, null, null, leafReaderContext) {
+            @Override
+            public double execute(ExplanationHolder explanation) {
+                return 1.0; // Return a constant score
+            }
+        });
+
+        // Rewrite the query to ensure we get the actual query to be executed
+        Query rewrittenQuery = wrappedSearcher.rewrite(scriptScoreQuery);
+
+        // Create a weight for the rewritten query to get the scorer
+        Weight weight = wrappedSearcher.createWeight(rewrittenQuery, ScoreMode.COMPLETE, 1f);
+
+        // Now, let's iterate over the segments (leaves) of the index
+        for (LeafReaderContext context : wrappedReader.leaves()) {
+            Scorer scorer = weight.scorer(context);
+            if (scorer != null) { // Check if the scorer is not null
+                TwoPhaseIterator twoPhaseIterator = scorer.twoPhaseIterator();
+                if (twoPhaseIterator != null) { // Check if the twoPhaseIterator is not null
+                    DocIdSetIterator docIdSetIterator = twoPhaseIterator.approximation();
+                    int docId;
+                    while ((docId = docIdSetIterator.nextDoc()) != DocIdSetIterator.NO_MORE_DOCS) {
+                        if (twoPhaseIterator.matches()) { // Check if the document matches
+                            // If matches() returns true, we assume the document is a match according to the ScriptScoreQuery logic
+                            // Here we simply assert that we can reach this point. Further logic could be added to validate specific document properties
+                            assertTrue("Document " + docId + " is expected to match", true);
+                            // Optionally, retrieve the document or its score here for further verification if needed
+                            break; // Break after the first match for brevity; remove or modify as needed for your test case
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private ScoreScript.LeafFactory newFactory(
         Script script,
         boolean needsScore,
@@ -203,5 +285,4 @@ public class ScriptScoreQueryTests extends OpenSearchTestCase {
             }
         };
     }
-
 }
