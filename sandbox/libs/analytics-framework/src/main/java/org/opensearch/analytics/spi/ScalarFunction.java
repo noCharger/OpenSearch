@@ -455,7 +455,15 @@ public enum ScalarFunction {
     MINSPAN_BUCKET(Category.SCALAR, SqlKind.OTHER_FUNCTION),
 
     /** PPL range_bucket(value, data_min, data_max, start_param, end_param). VARCHAR label. */
-    RANGE_BUCKET(Category.SCALAR, SqlKind.OTHER_FUNCTION);
+    RANGE_BUCKET(Category.SCALAR, SqlKind.OTHER_FUNCTION),
+
+    /**
+     * PPL cluster_assign(message, reps_json, t) — cosine nearest-representative label. Returns the
+     * 0-based representative index (INTEGER), or -1 when unmatched. Resolves by identifier-name
+     * "CLUSTER_ASSIGN" through {@link #fromSqlFunction(SqlFunction)}; rewritten to the
+     * {@code cluster_assign} Substrait extension by the DataFusion backend's ClusterAssignAdapter.
+     */
+    CLUSTER_ASSIGN(Category.SCALAR, SqlKind.OTHER_FUNCTION);
 
     /**
      * Category of scalar function.

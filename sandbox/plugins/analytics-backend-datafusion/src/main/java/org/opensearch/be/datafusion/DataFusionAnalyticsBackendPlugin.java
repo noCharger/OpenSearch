@@ -73,7 +73,11 @@ public class DataFusionAnalyticsBackendPlugin implements AnalyticsSearchBackendP
 
     private static final Logger LOGGER = LogManager.getLogger(DataFusionAnalyticsBackendPlugin.class);
 
-    private static final Set<EngineCapability> ENGINE_CAPS = Set.of(EngineCapability.SORT, EngineCapability.UNION, EngineCapability.VALUES);
+    private static final Set<EngineCapability> ENGINE_CAPS = Set.of(
+        EngineCapability.SORT,
+        EngineCapability.UNION,
+        EngineCapability.VALUES
+    );
 
     private static final Set<FieldType> SUPPORTED_FIELD_TYPES = new HashSet<>();
     static {
@@ -187,6 +191,7 @@ public class DataFusionAnalyticsBackendPlugin implements AnalyticsSearchBackendP
         ScalarFunction.REX_EXTRACT,
         ScalarFunction.REX_EXTRACT_MULTI,
         ScalarFunction.REX_OFFSET,
+        ScalarFunction.CLUSTER_ASSIGN,
         ScalarFunction.PLUS,
         ScalarFunction.TIMES,
         ScalarFunction.DIVIDE,
@@ -696,6 +701,7 @@ public class DataFusionAnalyticsBackendPlugin implements AnalyticsSearchBackendP
                     Map.entry(ScalarFunction.CAST, ipBinaryCast),
                     Map.entry(ScalarFunction.CEIL, new IntegerRoundingCastAdapter(SqlStdOperatorTable.CEIL)),
                     Map.entry(ScalarFunction.CIDRMATCH, new CidrMatchFunctionAdapter()),
+                    Map.entry(ScalarFunction.CLUSTER_ASSIGN, new ClusterAssignAdapter()),
                     Map.entry(ScalarFunction.COALESCE, new CoalesceAdapter()),
                     Map.entry(ScalarFunction.CONCAT, new ConcatFunctionAdapter()),
                     Map.entry(ScalarFunction.CONCAT_FUNCTION, new ConcatVariadicAdapter()),

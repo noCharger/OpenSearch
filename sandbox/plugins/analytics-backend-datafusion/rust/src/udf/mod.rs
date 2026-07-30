@@ -123,6 +123,7 @@ pub(crate) fn coerce_args(
 pub mod binary_to_base64;
 pub mod conv;
 pub mod convert_tz;
+pub mod cluster_assign;
 pub mod conversion;
 pub mod crc32;
 pub mod date_format;
@@ -177,6 +178,7 @@ pub fn register_all(ctx: &SessionContext) {
     binary_to_base64::register_all(ctx);
     conv::register_all(ctx);
     convert_tz::register_all(ctx);
+    cluster_assign::register_all(ctx);
     conversion::register_all(ctx);
     crc32::register_all(ctx);
     date_format::register_all(ctx);

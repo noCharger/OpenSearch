@@ -568,6 +568,43 @@ scalar_functions:
           - value: "string"
             name: "pattern"
         return: string
+  - name: cluster_assign
+    description: >-
+      Assign a document to the nearest representative cluster by sparse cosine
+      similarity (PPL cluster V1, increment ②: real shared tokenizer). Given a
+      document text `message` (column), a literal JSON array `reps` of K
+      representative event texts, a literal cosine threshold `t` (0 < t < 1), a
+      literal match mode `match` (termlist|termset|ngramset), and a literal
+      `delims` spec, returns the 1-based index (1..K) of the representative with
+      the highest cosine similarity, or -1 (UNMATCHED) when the best similarity
+      is < t. `reps`, `t`, `match`, and `delims` are validated as literals by the
+      Java ClusterAssignAdapter. The Rust UDF implementation lives at
+      sandbox/plugins/analytics-backend-datafusion/rust/src/udf/cluster_assign.rs.
+    impls:
+      - args:
+          - value: "varchar<L1>"
+            name: "message"
+          - value: "varchar<L2>"
+            name: "reps"
+          - value: fp64
+            name: "t"
+          - value: "varchar<L3>"
+            name: "match"
+          - value: "varchar<L4>"
+            name: "delims"
+        return: i32
+      - args:
+          - value: "string"
+            name: "message"
+          - value: "string"
+            name: "reps"
+          - value: fp64
+            name: "t"
+          - value: "string"
+            name: "match"
+          - value: "string"
+            name: "delims"
+        return: i32
   - name: array_length
     description: >-
       Number of elements in a list. Lowering target for PPL's `array_length()`
