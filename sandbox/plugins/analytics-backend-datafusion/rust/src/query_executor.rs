@@ -92,6 +92,8 @@ pub async fn execute_query(
         .with_config(config)
         .with_runtime_env(runtime_env)
         .with_default_features()
+        .with_serializer_registry(crate::unnest_extension::create_serializer_registry())
+        .with_query_planner(crate::unnest_extension::create_query_planner())
         .build();
 
     let ctx = SessionContext::new_with_state(state);

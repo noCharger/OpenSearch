@@ -33,6 +33,7 @@ import org.opensearch.analytics.planner.rel.OpenSearchProject;
 import org.opensearch.analytics.planner.rel.OpenSearchSort;
 import org.opensearch.analytics.planner.rel.OpenSearchTableScan;
 import org.opensearch.analytics.planner.rel.OpenSearchUnion;
+import org.opensearch.analytics.planner.rel.OpenSearchUnnest;
 import org.opensearch.analytics.planner.rel.OpenSearchValues;
 import org.opensearch.analytics.spi.FieldStorageInfo;
 
@@ -121,6 +122,16 @@ public class RelNodeUtils {
             return new OpenSearchUnion(newCluster, newTraits, newInputs, union.all, union.getViableBackends());
         } else if (node instanceof OpenSearchValues values) {
             return new OpenSearchValues(newCluster, newTraits, values.getRowType(), values.getTuples(), values.getViableBackends());
+        } else if (node instanceof OpenSearchUnnest unnest) {
+            return new OpenSearchUnnest(
+                newCluster,
+                newTraits,
+                newInputs.getFirst(),
+                unnest.getUnnestColumnIndex(),
+                unnest.getElementField(),
+                unnest.isWithOrdinality(),
+                unnest.getViableBackends()
+            );
         } else if (node instanceof OpenSearchExchangeReducer reducer) {
             return new OpenSearchExchangeReducer(
                 newCluster,

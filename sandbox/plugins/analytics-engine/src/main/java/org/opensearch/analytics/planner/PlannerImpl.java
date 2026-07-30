@@ -54,6 +54,7 @@ import org.opensearch.analytics.planner.rules.OpenSearchTableScanRule;
 import org.opensearch.analytics.planner.rules.OpenSearchTopKRewriter;
 import org.opensearch.analytics.planner.rules.OpenSearchUnionRule;
 import org.opensearch.analytics.planner.rules.OpenSearchUnionSplitRule;
+import org.opensearch.analytics.planner.rules.OpenSearchUnnestRule;
 import org.opensearch.analytics.planner.rules.OpenSearchValuesRule;
 
 import java.io.PrintWriter;
@@ -392,6 +393,7 @@ public class PlannerImpl {
                     new OpenSearchProjectRule(context),
                     new OpenSearchAggregateRule(context),
                     new OpenSearchJoinRule(context),
+                    new OpenSearchUnnestRule(context),
                     new OpenSearchSortRule(context),
                     new OpenSearchUnionRule(context),
                     new OpenSearchValuesRule(context)

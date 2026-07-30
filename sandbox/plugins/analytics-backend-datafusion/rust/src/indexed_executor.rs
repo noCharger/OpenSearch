@@ -134,6 +134,8 @@ pub async fn execute_indexed_query(
         .with_runtime_env(Arc::from(runtime_env))
         .with_default_features()
         .with_physical_optimizer_rules(crate::agg_mode::physical_optimizer_rules_without_combine())
+        .with_serializer_registry(crate::unnest_extension::create_serializer_registry())
+        .with_query_planner(crate::unnest_extension::create_query_planner())
         .build();
     let ctx = SessionContext::new_with_state(state);
     ctx.register_udf(create_index_filter_udf());

@@ -77,6 +77,8 @@ impl LocalSession {
             .with_runtime_env(runtime_env)
             .with_default_features()
             .with_physical_optimizer_rules(crate::agg_mode::physical_optimizer_rules_without_combine())
+            .with_serializer_registry(crate::unnest_extension::create_serializer_registry())
+            .with_query_planner(crate::unnest_extension::create_query_planner())
             .build();
         let ctx = SessionContext::new_with_state(state);
         crate::udf::register_all(&ctx);

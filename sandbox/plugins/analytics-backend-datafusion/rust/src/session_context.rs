@@ -214,7 +214,9 @@ pub async unsafe fn create_session_context(
             crate::agg_mode::physical_optimizer_rules_without_combine()
         } else {
             datafusion::physical_optimizer::optimizer::PhysicalOptimizer::new().rules
-        });
+        })
+        .with_serializer_registry(crate::unnest_extension::create_serializer_registry())
+        .with_query_planner(crate::unnest_extension::create_query_planner());
 
     // For ListingTable query strategy:
     // 1. Add ProjectRowIdAnalyzer (logical) — ensures __row_id__ survives pruning.

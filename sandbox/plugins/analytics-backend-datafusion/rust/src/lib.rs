@@ -54,6 +54,7 @@ pub mod statistics_cache;
 pub mod udaf;
 pub mod udf;
 pub mod udwf;
+pub mod unnest_extension;
 pub mod native_node_stats;
 pub mod search_stats;
 pub mod stats;

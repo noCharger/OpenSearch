@@ -73,7 +73,12 @@ public class DataFusionAnalyticsBackendPlugin implements AnalyticsSearchBackendP
 
     private static final Logger LOGGER = LogManager.getLogger(DataFusionAnalyticsBackendPlugin.class);
 
-    private static final Set<EngineCapability> ENGINE_CAPS = Set.of(EngineCapability.SORT, EngineCapability.UNION, EngineCapability.VALUES);
+    private static final Set<EngineCapability> ENGINE_CAPS = Set.of(
+        EngineCapability.SORT,
+        EngineCapability.UNION,
+        EngineCapability.VALUES,
+        EngineCapability.UNNEST
+    );
 
     private static final Set<FieldType> SUPPORTED_FIELD_TYPES = new HashSet<>();
     static {

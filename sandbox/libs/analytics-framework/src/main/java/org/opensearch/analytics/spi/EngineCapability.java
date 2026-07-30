@@ -22,5 +22,6 @@ package org.opensearch.analytics.spi;
 public enum EngineCapability {
     SORT,
     UNION,
-    VALUES
+    VALUES,
+    UNNEST
 }

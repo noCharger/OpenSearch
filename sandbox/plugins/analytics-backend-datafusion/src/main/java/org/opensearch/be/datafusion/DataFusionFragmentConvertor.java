@@ -85,6 +85,7 @@ import io.substrait.relation.Rel;
 import io.substrait.relation.Sort;
 import io.substrait.type.NamedStruct;
 import io.substrait.type.Type;
+import io.substrait.type.TypeCreator;
 import io.substrait.type.proto.TypeProtoConverter;
 
 /** Converts Calcite RelNode fragments to Substrait protobuf bytes for the DataFusion Rust runtime. */
@@ -631,6 +632,9 @@ public class DataFusionFragmentConvertor implements FragmentConvertor {
             Rel rewiredInput = fetch.getInput() instanceof Sort ? replaceInput(fetch.getInput(), newInput) : newInput;
             return Fetch.builder().from(fetch).input(rewiredInput).build();
         }
+        if (wrapper instanceof io.substrait.relation.ExtensionSingle es) {
+            return io.substrait.relation.ExtensionSingle.builder().from(es).input(newInput).build();
+        }
         throw new UnsupportedOperationException(
             "Cannot attach-on-top a Substrait Rel of type " + wrapper.getClass().getSimpleName() + " — no single-input rewire defined"
         );
@@ -775,7 +779,184 @@ public class DataFusionFragmentConvertor implements FragmentConvertor {
                 Rel rel = super.visit(aggregate);
                 return rel instanceof Aggregate agg ? addNullArgFilters(aggregate, agg) : rel;
             }
+
+            @Override
+            public Rel apply(RelNode relNode) {
+                // Handle CalciteUnnestRel before standard dispatch — isthmus has no converter for it.
+                if (relNode instanceof org.opensearch.analytics.planner.rel.CalciteUnnestRel unnest) {
+                    return buildUnnestExtensionSingle(unnest, this, typeConverter);
+                }
+                return super.apply(relNode);
+            }
         };
+    }
+
+    /**
+     * Builds an {@link io.substrait.relation.ExtensionSingle} for a {@code CalciteUnnestRel}.
+     *
+     * <p>The detail encoding is a minimal JSON object:
+     * <pre>
+     *   {"arrayColIdx": &lt;int&gt;, "elementTypeName": "&lt;Str|I64|...&gt;", "ordinality": false}
+     * </pre>
+     * The Rust consumer deserializes this from the {@code ExtensionSingleRel.detail.value} bytes
+     * and wires it into DataFusion's native {@code UnnestExec}.
+     *
+     * <p>Output schema = input schema + appended element column. The element type is derived from
+     * the original Correlate/Uncollect idiom and carried on {@code CalciteUnnestRel.getElementField()}.
+     */
+    private static io.substrait.relation.ExtensionSingle buildUnnestExtensionSingle(
+        org.opensearch.analytics.planner.rel.CalciteUnnestRel unnest,
+        SubstraitRelVisitor visitor,
+        TypeConverter typeConverter
+    ) {
+        // Convert the child recursively
+        Rel inputRel = visitor.apply(unnest.getInput());
+
+        // Build output schema: input fields + appended element field
+        RelDataType rowType = unnest.getRowType();
+        List<String> names = new ArrayList<>(rowType.getFieldCount());
+        List<Type> fieldTypes = new ArrayList<>(rowType.getFieldCount());
+        for (RelDataTypeField f : rowType.getFieldList()) {
+            names.add(f.getName());
+            if (isCharacter(f.getType())) {
+                fieldTypes.add(TypeCreator.of(f.getType().isNullable()).STRING);
+            } else {
+                fieldTypes.add(typeConverter.toSubstrait(f.getType()));
+            }
+        }
+        Type.Struct derivedStruct = TypeCreator.REQUIRED.struct(fieldTypes);
+
+        // Build the detail encoding as JSON bytes
+        // Format: {"arrayColIdx": N, "elementTypeName": "Str", "ordinality": false}
+        Type elementType = fieldTypes.get(fieldTypes.size() - 1);
+        String elementTypeName = getSubstraitTypeName(elementType);
+        String detailJson = String.format(
+            "{\"arrayColIdx\":%d,\"elementTypeName\":\"%s\",\"ordinality\":%s}",
+            unnest.getUnnestColumnIndex(),
+            elementTypeName,
+            unnest.isWithOrdinality()
+        );
+
+        // Build the ExtensionSingle via the detail interface
+        io.substrait.relation.Extension.SingleRelDetail detail = new UnnestExtensionDetail(detailJson, elementType);
+        return io.substrait.relation.ExtensionSingle.builder()
+            .input(inputRel)
+            .detail(detail)
+            .deriveRecordType(derivedStruct)
+            .build();
+    }
+
+    /**
+     * Returns a short type name from a Substrait {@link Type} for the unnest detail encoding.
+     * Returns names like "Str", "I64", "Bool", etc.
+     */
+    private static String getSubstraitTypeName(Type type) {
+        if (type instanceof Type.Bool) return "Bool";
+        if (type instanceof Type.I8) return "I8";
+        if (type instanceof Type.I16) return "I16";
+        if (type instanceof Type.I32) return "I32";
+        if (type instanceof Type.I64) return "I64";
+        if (type instanceof Type.FP32) return "FP32";
+        if (type instanceof Type.FP64) return "FP64";
+        if (type instanceof Type.Str) return "Str";
+        if (type instanceof Type.Binary) return "Binary";
+        if (type instanceof Type.Date) return "Date";
+        if (type instanceof Type.Time) return "Time";
+        if (type instanceof Type.TimestampTZ) return "TimestampTZ";
+        if (type instanceof Type.Timestamp) return "Timestamp";
+        if (type instanceof Type.IntervalYear) return "IntervalYear";
+        if (type instanceof Type.IntervalDay) return "IntervalDay";
+        if (type instanceof Type.UUID) return "UUID";
+        if (type instanceof Type.FixedChar) return "FixedChar";
+        if (type instanceof Type.VarChar) return "VarChar";
+        if (type instanceof Type.FixedBinary) return "FixedBinary";
+        if (type instanceof Type.Decimal) return "Decimal";
+        if (type instanceof Type.Struct) return "Struct";
+        if (type instanceof Type.ListType) return "List";
+        if (type instanceof Type.Map) return "Map";
+        if (type instanceof Type.UserDefined) return "UserDefined";
+        if (type instanceof Type.PrecisionTimestamp) return "PrecisionTimestamp";
+        if (type instanceof Type.PrecisionTimestampTZ) return "PrecisionTimestampTZ";
+        return "Unknown";
+    }
+
+    /**
+     * Implementation of {@link io.substrait.relation.Extension.SingleRelDetail} for UNNEST.
+     * The detail is encoded as UTF-8 JSON bytes with type_url = "/opensearch.analytics.unnest.v1".
+     */
+    private static class UnnestExtensionDetail implements io.substrait.relation.Extension.SingleRelDetail {
+        private static final String TYPE_URL = "/opensearch.analytics.unnest.v1";
+        private final String json;
+        private final Type elementType;
+
+        UnnestExtensionDetail(String json, Type elementType) {
+            this.json = json;
+            this.elementType = elementType;
+        }
+
+        @Override
+        public com.google.protobuf.Any toProto(io.substrait.relation.RelProtoConverter converter) {
+            return com.google.protobuf.Any.newBuilder()
+                .setTypeUrl(TYPE_URL)
+                .setValue(com.google.protobuf.ByteString.copyFromUtf8(json))
+                .build();
+        }
+
+        /**
+         * Output schema = input fields + the appended element column. Derived from the
+         * live input so it stays correct after a proto decode round-trip (multi-stage
+         * fragment stitching), where the detail is reconstructed from the encoded JSON.
+         */
+        @Override
+        public Type.Struct deriveRecordType(Rel input) {
+            List<Type> fields = new ArrayList<>(input.getRecordType().fields());
+            fields.add(elementType);
+            return TypeCreator.REQUIRED.struct(fields);
+        }
+    }
+
+    /** Reverse of {@link #getSubstraitTypeName}: element type name -> nullable Substrait type (unnest elements are nullable). */
+    private static Type elementTypeFromName(String name) {
+        TypeCreator t = TypeCreator.NULLABLE;
+        return switch (name) {
+            case "Bool" -> t.BOOLEAN;
+            case "I8" -> t.I8;
+            case "I16" -> t.I16;
+            case "I32" -> t.I32;
+            case "I64" -> t.I64;
+            case "FP32" -> t.FP32;
+            case "FP64" -> t.FP64;
+            case "Date" -> t.DATE;
+            default -> t.STRING;
+        };
+    }
+
+    /**
+     * Decode-side ProtoRelConverter that reconstructs the UNNEST {@link UnnestExtensionDetail}
+     * from the encoded JSON Any so a round-tripped {@code ExtensionSingle} keeps its record type
+     * (input fields + element). Without this the default converter yields an opaque detail whose
+     * deriveRecordType is empty, breaking any operator re-wired on top during multi-stage stitching.
+     */
+    private static final class UnnestAwareProtoRelConverter extends io.substrait.relation.ProtoRelConverter {
+        UnnestAwareProtoRelConverter(io.substrait.extension.ExtensionLookup lookup, SimpleExtension.ExtensionCollection ext) {
+            super(lookup, ext);
+        }
+
+        @Override
+        protected io.substrait.relation.Extension.SingleRelDetail detailFromExtensionSingleRel(com.google.protobuf.Any any) {
+            if (UnnestExtensionDetail.TYPE_URL.equals(any.getTypeUrl())) {
+                String json = any.getValue().toStringUtf8();
+                String elemName = json.replaceAll(".*\"elementTypeName\"\\s*:\\s*\"([^\"]+)\".*", "$1");
+                return new UnnestExtensionDetail(json, elementTypeFromName(elemName));
+            }
+            return super.detailFromExtensionSingleRel(any);
+        }
+    }
+
+
+    private static boolean isCharacter(RelDataType type) {
+        SqlTypeName t = type.getSqlTypeName();
+        return t == SqlTypeName.CHAR || t == SqlTypeName.VARCHAR;
     }
 
     /**
@@ -960,7 +1141,12 @@ public class DataFusionFragmentConvertor implements FragmentConvertor {
     private Plan decodePlan(byte[] bytes) {
         try {
             io.substrait.proto.Plan proto = io.substrait.proto.Plan.parseFrom(bytes);
-            return new ProtoPlanConverter(extensions).from(proto);
+            return new ProtoPlanConverter(extensions) {
+                @Override
+                protected io.substrait.relation.ProtoRelConverter getProtoRelConverter(io.substrait.extension.ExtensionLookup lookup) {
+                    return new UnnestAwareProtoRelConverter(lookup, extensions);
+                }
+            }.from(proto);
         } catch (InvalidProtocolBufferException e) {
             throw new IllegalArgumentException("Failed to decode Substrait plan bytes", e);
         }

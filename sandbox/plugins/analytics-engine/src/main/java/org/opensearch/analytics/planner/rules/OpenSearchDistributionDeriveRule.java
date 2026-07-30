@@ -22,6 +22,7 @@ import org.opensearch.analytics.planner.rel.OpenSearchDistributionTraitDef;
 import org.opensearch.analytics.planner.rel.OpenSearchFilter;
 import org.opensearch.analytics.planner.rel.OpenSearchProject;
 import org.opensearch.analytics.planner.rel.OpenSearchSort;
+import org.opensearch.analytics.planner.rel.OpenSearchUnnest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -102,7 +103,8 @@ public class OpenSearchDistributionDeriveRule extends RelOptRule {
         if (!(rel instanceof OpenSearchFilter
             || rel instanceof OpenSearchProject
             || rel instanceof OpenSearchSort
-            || rel instanceof OpenSearchAggregate)) return false;
+            || rel instanceof OpenSearchAggregate
+            || rel instanceof OpenSearchUnnest)) return false;
         // SINGLE aggregates should NOT be derived to EXECUTION(SINGLETON): that would
         // bypass {@link OpenSearchAggregateSplitRule}'s PARTIAL/FINAL decomposition and
         // ship raw rows to coord instead of pre-aggregating. PARTIAL and FINAL CAN be
